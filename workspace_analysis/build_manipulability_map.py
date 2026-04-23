@@ -142,7 +142,7 @@ def compute_metrics(J: np.ndarray, q: np.ndarray, joint_limits: list,
 
 class VoxelStats:
     """单个6D voxel的统计数据"""
-    __slots__ = ['count', 'Q_max', 'Q_sum', 'Q_sq_sum', 'Q_values',
+    __slots__ = ['count', 'Q_max', 'Q_sum', 'Q_sq_sum',
                  'best_q', 'mu_trans_max', 'mu_6d_max', 'icn_6d_max',
                  'joint_margin_min_best']
 
@@ -151,7 +151,6 @@ class VoxelStats:
         self.Q_max = -np.inf
         self.Q_sum = 0.0
         self.Q_sq_sum = 0.0
-        self.Q_values = []  # 保留用于分位数计算 (中等规模)
         self.best_q = None
         self.mu_trans_max = 0.0
         self.mu_6d_max = 0.0
@@ -162,7 +161,6 @@ class VoxelStats:
         self.count += 1
         self.Q_sum += Q
         self.Q_sq_sum += Q * Q
-        self.Q_values.append(Q)
 
         if Q > self.Q_max:
             self.Q_max = Q
@@ -354,12 +352,14 @@ class ManipulabilityMapBuilder:
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        # 保存config
+        # 保存共享config和按arm区分的config，避免both模式下互相覆盖
         config = self.config.copy()
-        # 计算URDF hash
         with open(self.urdf_path, 'rb') as f:
             config['urdf_hash'] = hashlib.md5(f.read()).hexdigest()
+
         with open(out / 'config.json', 'w') as f:
+            json.dump(config, f, indent=2)
+        with open(out / f'{self.arm}_config.json', 'w') as f:
             json.dump(config, f, indent=2)
 
         # 保存3D投影
