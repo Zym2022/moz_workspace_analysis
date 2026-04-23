@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+
+# Results / generated data
+workspace_analysis/results*/
+*.npz
+*.png
+
+# Large mesh files
+spirit_moz1/meshes/
+*.STL
+*.stl
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
