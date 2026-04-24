@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 2 单元测试：验证 icn_ext_approx 核心算法
+Phase 2 单元测试：验证 icn_ext_approx 和 icn_ext_vahrenkamp_exact 核心算法
 """
 
 import numpy as np
@@ -8,7 +8,10 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
-from compute_icn_ext import compute_joint_penalties, compute_icn_ext_approx, generate_all_gammas
+from compute_icn_ext import (compute_joint_penalties, compute_icn_ext_approx,
+                              compute_joint_penalties_vahrenkamp_exact,
+                              compute_icn_ext_vahrenkamp_exact,
+                              generate_all_gammas)
 
 
 def test_generate_gammas():
@@ -157,18 +160,95 @@ def test_uniform_penalty():
     print("✓ test_uniform_penalty: 仅关节居中时成立（已在 test_joint_center 验证）")
 
 
+def test_vahrenkamp_exact_joint_center():
+    """测试：论文原式在关节居中时的行为"""
+    np.random.seed(42)
+    J = np.random.randn(6, 7)
+    joint_limits = [(-np.pi, np.pi) for _ in range(7)]
+
+    # 关节居中
+    q = np.zeros(7)
+
+    Lc = 0.25
+    Jw = J.copy()
+    Jw[3:, :] *= Lc
+    sv = np.linalg.svd(Jw, compute_uv=False)
+    icn_6d = sv[-1] / sv[0]
+
+    result = compute_icn_ext_vahrenkamp_exact(J, q, joint_limits, Lc)
+    icn_ext_exact = result['icn_ext_vahrenkamp_exact']
+
+    # 论文原式在居中时，梯度 = 0，sigmoid 映射后 penalty_pos = penalty_neg ≈ 0.5
+    # 因此应该与 icn_6d 接近（但可能不完全相等，取决于 sigmoid 映射）
+    diff = abs(icn_ext_exact - icn_6d)
+    print(f"✓ test_vahrenkamp_exact_joint_center: icn_6d = {icn_6d:.6f}, icn_ext_exact = {icn_ext_exact:.6f}, diff = {diff:.6f}")
+
+
+def test_vahrenkamp_exact_single_joint_limit():
+    """测试：论文原式在单关节极限时的行为"""
+    np.random.seed(42)
+    J = np.random.randn(6, 7)
+    joint_limits = [(-np.pi, np.pi) for _ in range(7)]
+
+    # 关节 3 接近上限（但留 epsilon 安全距离）
+    q = np.zeros(7)
+    epsilon = 0.01
+    q[3] = joint_limits[3][1] - epsilon
+
+    Lc = 0.25
+    Jw = J.copy()
+    Jw[3:, :] *= Lc
+    sv = np.linalg.svd(Jw, compute_uv=False)
+    icn_6d = sv[-1] / sv[0]
+
+    result = compute_icn_ext_vahrenkamp_exact(J, q, joint_limits, Lc, epsilon=epsilon)
+    icn_ext_exact = result['icn_ext_vahrenkamp_exact']
+
+    # 应该显著降低
+    assert icn_ext_exact < icn_6d, f"Expected icn_ext_exact < icn_6d"
+    print(f"✓ test_vahrenkamp_exact_single_joint_limit: icn_6d = {icn_6d:.6f}, icn_ext_exact = {icn_ext_exact:.6f} (ratio = {icn_ext_exact/icn_6d:.3f})")
+
+
+def test_vahrenkamp_exact_vs_approx():
+    """测试：论文原式与线性近似的对比"""
+    np.random.seed(42)
+    J = np.random.randn(6, 7)
+    joint_limits = [(-np.pi, np.pi) for _ in range(7)]
+
+    # 关节在 1/4 位置
+    q = np.array([lo + 0.25 * (hi - lo) for lo, hi in joint_limits])
+
+    Lc = 0.25
+    result_approx = compute_icn_ext_approx(J, q, joint_limits, Lc)
+    result_exact = compute_icn_ext_vahrenkamp_exact(J, q, joint_limits, Lc)
+
+    icn_ext_approx = result_approx['icn_ext_approx']
+    icn_ext_exact = result_exact['icn_ext_vahrenkamp_exact']
+
+    # 两者应该都有效，但数值可能不同
+    assert icn_ext_approx > 0, "icn_ext_approx should be > 0"
+    assert icn_ext_exact > 0, "icn_ext_exact should be > 0"
+    print(f"✓ test_vahrenkamp_exact_vs_approx: approx = {icn_ext_approx:.6f}, exact = {icn_ext_exact:.6f}, diff = {abs(icn_ext_approx - icn_ext_exact):.6f}")
+
+
 def run_all_tests():
     """运行所有测试"""
     print("="*60)
     print("Phase 2 Unit Tests")
     print("="*60)
 
+    print("\n--- Linear Margin Approximation Tests ---")
     test_generate_gammas()
     test_joint_center()
     test_single_joint_limit()
     test_all_joints_limit()
     test_zero_jacobian_element()
     test_uniform_penalty()
+
+    print("\n--- Vahrenkamp Exact (Paper Formula) Tests ---")
+    test_vahrenkamp_exact_joint_center()
+    test_vahrenkamp_exact_single_joint_limit()
+    test_vahrenkamp_exact_vs_approx()
 
     print("\n" + "="*60)
     print("All tests passed!")

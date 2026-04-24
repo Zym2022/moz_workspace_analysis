@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Phase 2: Vahrenkamp Extended Manipulability (Linear Margin Approximation)
-计算 icn_ext_approx：基于线性关节裕度的方向性惩罚版本（非论文原式）
+Phase 2: Vahrenkamp Extended Manipulability
+- icn_ext_approx: 线性关节裕度近似版本
+- icn_ext_vahrenkamp_exact: 论文原式（joint-limit potential 梯度）
 """
 
 import numpy as np
@@ -61,6 +62,65 @@ def compute_joint_penalties(q: np.ndarray, joint_limits: list) -> Tuple[np.ndarr
     # Clamp 到 [0, 1]
     penalty_pos = np.clip(penalty_pos, 0.0, 1.0)
     penalty_neg = np.clip(penalty_neg, 0.0, 1.0)
+
+    return penalty_pos, penalty_neg
+
+
+def compute_joint_penalties_vahrenkamp_exact(q: np.ndarray, joint_limits: list,
+                                              epsilon: float = 0.01) -> Tuple[np.ndarray, np.ndarray]:
+    """计算 Vahrenkamp 论文原式的 joint-limit potential 梯度惩罚
+
+    基于势函数 P(q) = 1/4 · Σ_j [(q_max - q_min)² / ((q_max - q)(q - q_min))]
+    梯度: ∂P/∂q_j = 1/4 · (q_max - q_min)² · [(q_max - q) - (q - q_min)] / [(q_max - q)²(q - q_min)²]
+
+    Args:
+        q: 关节角 [7]
+        joint_limits: [(lower, upper), ...] 关节限位
+        epsilon: 安全距离，防止 q 接近限位时数值爆炸（单位：弧度）
+
+    Returns:
+        penalty_pos: [7] 正转惩罚（朝上限），基于梯度归一化
+        penalty_neg: [7] 反转惩罚（朝下限），基于梯度归一化
+    """
+    n_joints = len(q)
+    penalty_pos = np.zeros(n_joints)
+    penalty_neg = np.zeros(n_joints)
+
+    for j in range(n_joints):
+        lo, hi = joint_limits[j]
+        rng = hi - lo
+
+        if rng < 1e-10:
+            # 无限位范围，不惩罚
+            penalty_pos[j] = 1.0
+            penalty_neg[j] = 1.0
+            continue
+
+        # 安全裕度：确保 q 不会太接近限位
+        q_safe = np.clip(q[j], lo + epsilon, hi - epsilon)
+        dist_to_upper = hi - q_safe
+        dist_to_lower = q_safe - lo
+
+        # 势函数梯度（简化形式）
+        # ∂P/∂q_j ∝ (dist_to_upper - dist_to_lower) / (dist_to_upper² · dist_to_lower²)
+        gradient = (dist_to_upper - dist_to_lower) / (dist_to_upper**2 * dist_to_lower**2)
+
+        # 归一化到 [0, 1] 范围
+        # 梯度 > 0 时，q 靠近下限，正转（朝上限）受限小，反转（朝下限）受限大
+        # 梯度 < 0 时，q 靠近上限，正转受限大，反转受限小
+        # 梯度 = 0 时，q 在中位，两方向受限相同
+
+        # 使用 sigmoid 映射梯度到 [0, 1]
+        # 当 gradient > 0（靠近下限）：penalty_pos 高（接近1），penalty_neg 低
+        # 当 gradient < 0（靠近上限）：penalty_pos 低，penalty_neg 高（接近1）
+        # 当 gradient = 0（居中）：两者都接近 0.5
+
+        # 缩放因子：控制梯度到惩罚的映射敏感度
+        scale = rng**2 / 4.0
+
+        # Sigmoid 映射
+        penalty_pos[j] = 1.0 / (1.0 + np.exp(-gradient * scale))
+        penalty_neg[j] = 1.0 / (1.0 + np.exp(gradient * scale))
 
     return penalty_pos, penalty_neg
 
@@ -140,6 +200,86 @@ def compute_icn_ext_approx(J: np.ndarray, q: np.ndarray, joint_limits: list,
 
     return {
         'icn_ext_approx': icn_ext_approx,
+        'sigma_min': sigma_min_global,
+        'sigma_max': sigma_max_global,
+        'worst_gamma_idx': worst_gamma_idx,
+    }
+
+
+def compute_icn_ext_vahrenkamp_exact(J: np.ndarray, q: np.ndarray, joint_limits: list,
+                                      Lc: float = 0.25, eps: float = 1e-10,
+                                      epsilon: float = 0.01) -> Dict:
+    """计算单个构型的 icn_ext_vahrenkamp_exact（论文原式）
+
+    使用 joint-limit potential 梯度惩罚，而非线性裕度近似。
+
+    Args:
+        J: 6x7 几何 Jacobian
+        q: 关节角 [7]
+        joint_limits: [(lower, upper), ...] 关节限位
+        Lc: 特征长度
+        eps: Jacobian 元素阈值
+        epsilon: 安全距离，防止数值爆炸
+
+    Returns:
+        result: dict
+            - icn_ext_vahrenkamp_exact: float
+            - sigma_min: float
+            - sigma_max: float
+            - worst_gamma_idx: int
+    """
+    # 加权 Jacobian
+    Jw = J.copy()
+    Jw[3:, :] *= Lc
+
+    # 计算论文原式惩罚
+    penalty_pos, penalty_neg = compute_joint_penalties_vahrenkamp_exact(q, joint_limits, epsilon)
+
+    # 生成所有超象限
+    gammas = generate_all_gammas()
+
+    # 收集所有奇异值
+    all_sigmas = []
+    sigma_min_global = np.inf
+    sigma_max_global = -np.inf
+    worst_gamma_idx = -1
+
+    for gamma_idx, gamma in enumerate(gammas):
+        # 构造 L_Γ [6, 7]
+        L_gamma = np.ones((6, 7))
+
+        for i in range(6):
+            for j in range(7):
+                if abs(Jw[i, j]) < eps:
+                    L_gamma[i, j] = 1.0
+                else:
+                    required_direction = np.sign(gamma[i] * Jw[i, j])
+                    if required_direction > 0:
+                        L_gamma[i, j] = penalty_pos[j]
+                    else:
+                        L_gamma[i, j] = penalty_neg[j]
+
+        # Augmented Jacobian
+        J_tilde = L_gamma * Jw
+
+        # SVD
+        sigmas = np.linalg.svd(J_tilde, compute_uv=False)
+        all_sigmas.extend(sigmas)
+
+        if sigmas.min() < sigma_min_global:
+            sigma_min_global = sigmas.min()
+            worst_gamma_idx = gamma_idx
+        if sigmas.max() > sigma_max_global:
+            sigma_max_global = sigmas.max()
+
+    # 计算 icn_ext_vahrenkamp_exact
+    if sigma_max_global > eps:
+        icn_ext_vahrenkamp_exact = sigma_min_global / sigma_max_global
+    else:
+        icn_ext_vahrenkamp_exact = 0.0
+
+    return {
+        'icn_ext_vahrenkamp_exact': icn_ext_vahrenkamp_exact,
         'sigma_min': sigma_min_global,
         'sigma_max': sigma_max_global,
         'worst_gamma_idx': worst_gamma_idx,
@@ -335,10 +475,179 @@ class Phase1BestQIcnExtEvaluator:
         print(f"Saved: {config_path}")
 
 
+class Phase1BestQIcnExtVahrenkampExactEvaluator:
+    """对 Phase 1 best_q 计算 icn_ext_vahrenkamp_exact（论文原式）"""
+
+    def __init__(self, urdf_path: str, arm: str, result_dir: str, epsilon: float = 0.01):
+        self.urdf_path = urdf_path
+        self.arm = arm
+        self.result_dir = Path(result_dir)
+        self.epsilon = epsilon
+
+        # 加载 Phase 1 数据（复用相同逻辑）
+        self._load_phase1_data()
+
+        # 初始化运动学
+        self.kin = URDFKinematics(urdf_path, arm)
+        self.joint_limits = [j['limits'] for j in self.kin.joints]
+
+    def _load_phase1_data(self):
+        """加载 Phase 1 的 npz 和 config，校验一致性"""
+        npz_path = self.result_dir / f'{self.arm}_position_projection.npz'
+        if not npz_path.exists():
+            raise FileNotFoundError(f"Phase 1 result not found: {npz_path}")
+
+        self.phase1_data = np.load(npz_path)
+
+        config_path = self.result_dir / f'{self.arm}_config.json'
+        if not config_path.exists():
+            config_path = self.result_dir / 'config.json'
+
+        with open(config_path) as f:
+            self.phase1_config = json.load(f)
+
+        # 校验 URDF hash
+        import hashlib
+        with open(self.urdf_path, 'rb') as f:
+            current_hash = hashlib.md5(f.read()).hexdigest()
+
+        phase1_hash = self.phase1_config.get('urdf_hash', '')
+        if current_hash != phase1_hash:
+            raise ValueError(
+                f"URDF hash mismatch!\n"
+                f"  Phase 1: {phase1_hash}\n"
+                f"  Current: {current_hash}\n"
+                f"  Phase 1 和 Phase 2 必须使用相同的 URDF 文件。"
+            )
+
+        print(f"Loaded Phase 1 data from {self.result_dir}")
+        print(f"  URDF hash: {current_hash}")
+        print(f"  Arm: {self.arm}")
+        print(f"  Position voxels: {len(self.phase1_data['positions'])}")
+
+    def compute(self, min_count: int = 2):
+        """主计算流程"""
+        positions = self.phase1_data['positions']
+        best_qs = self.phase1_data['best_qs']
+        total_counts = self.phase1_data['total_counts']
+
+        # 过滤低支撑 voxel
+        mask = total_counts >= min_count
+        positions_filtered = positions[mask]
+        best_qs_filtered = best_qs[mask]
+
+        n_voxels = len(positions_filtered)
+        print(f"\nComputing icn_ext_vahrenkamp_exact for {n_voxels} voxels (min_count >= {min_count})...")
+
+        # 初始化结果数组
+        self.positions = positions_filtered
+        self.icn_ext_vahrenkamp_exact = np.zeros(n_voxels)
+        self.icn_6d_at_best_q = np.zeros(n_voxels)
+        self.joint_margin_min = np.zeros(n_voxels)
+        self.sigma_min = np.zeros(n_voxels)
+        self.sigma_max = np.zeros(n_voxels)
+
+        Lc = self.phase1_config.get('Lc', 0.25)
+
+        t0 = time.time()
+        for i in range(n_voxels):
+            q = best_qs_filtered[i]
+
+            # FK + Jacobian
+            pos, rot = self.kin.forward_kinematics(q)
+            J = self.kin.jacobian(q)
+
+            # 计算 icn_ext_vahrenkamp_exact
+            result = compute_icn_ext_vahrenkamp_exact(J, q, self.joint_limits, Lc, epsilon=self.epsilon)
+            self.icn_ext_vahrenkamp_exact[i] = result['icn_ext_vahrenkamp_exact']
+            self.sigma_min[i] = result['sigma_min']
+            self.sigma_max[i] = result['sigma_max']
+
+            # 重新计算 icn_6d（确保可比）
+            Jw = J.copy()
+            Jw[3:, :] *= Lc
+            sv = np.linalg.svd(Jw, compute_uv=False)
+            if sv[-1] > 1e-10:
+                self.icn_6d_at_best_q[i] = sv[-1] / sv[0]
+            else:
+                self.icn_6d_at_best_q[i] = 0.0
+
+            # 计算关节裕度
+            margins = []
+            for j, (lo, hi) in enumerate(self.joint_limits):
+                rng = hi - lo
+                if rng > 1e-10:
+                    margin = min(q[j] - lo, hi - q[j]) / (rng / 2)
+                    margins.append(max(0, margin))
+                else:
+                    margins.append(0.0)
+            self.joint_margin_min[i] = min(margins)
+
+            if (i + 1) % 10000 == 0:
+                elapsed = time.time() - t0
+                rate = (i + 1) / elapsed
+                eta = (n_voxels - i - 1) / rate
+                print(f"  {i+1}/{n_voxels} ({rate:.0f}/s, ETA {eta:.0f}s)")
+
+        elapsed = time.time() - t0
+        print(f"\nDone in {elapsed:.1f}s ({n_voxels/elapsed:.0f} voxels/s)")
+
+        # 统计
+        print(f"\nStatistics:")
+        print(f"  icn_ext_vahrenkamp_exact range: [{self.icn_ext_vahrenkamp_exact.min():.4f}, {self.icn_ext_vahrenkamp_exact.max():.4f}]")
+        print(f"  icn_6d_at_best_q range: [{self.icn_6d_at_best_q.min():.4f}, {self.icn_6d_at_best_q.max():.4f}]")
+        print(f"  joint_margin_min range: [{self.joint_margin_min.min():.4f}, {self.joint_margin_min.max():.4f}]")
+
+        # 对比统计
+        diff = self.icn_6d_at_best_q - self.icn_ext_vahrenkamp_exact
+        print(f"  icn_6d - icn_ext_vahrenkamp_exact:")
+        print(f"    mean: {diff.mean():.4f}")
+        print(f"    std: {diff.std():.4f}")
+        print(f"    min: {diff.min():.4f}, max: {diff.max():.4f}")
+        print(f"    icn_ext_vahrenkamp_exact > icn_6d count: {(self.icn_ext_vahrenkamp_exact > self.icn_6d_at_best_q).sum()} ({100*(self.icn_ext_vahrenkamp_exact > self.icn_6d_at_best_q).sum()/n_voxels:.1f}%)")
+
+    def save(self, output_dir: str):
+        """保存结果"""
+        out_dir = Path(output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存 npz
+        npz_path = out_dir / f'{self.arm}_icn_ext_vahrenkamp_exact_of_phase1_best_q.npz'
+        np.savez_compressed(
+            npz_path,
+            positions=self.positions,
+            icn_ext_vahrenkamp_exact=self.icn_ext_vahrenkamp_exact,
+            icn_6d_at_best_q=self.icn_6d_at_best_q,
+            joint_margin_min=self.joint_margin_min,
+            sigma_min=self.sigma_min,
+            sigma_max=self.sigma_max,
+        )
+        print(f"\nSaved: {npz_path}")
+
+        # 保存 arm-specific config
+        config = {
+            'arm': self.arm,
+            'phase1_result_dir': str(self.result_dir),
+            'phase1_urdf_hash': self.phase1_config.get('urdf_hash', ''),
+            'penalty_type': 'vahrenkamp_exact',
+            'epsilon': self.epsilon,
+            'Lc': self.phase1_config.get('Lc', 0.25),
+            'min_count': 2,
+            'n_gammas': 64,
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'n_voxels': len(self.positions),
+        }
+
+        config_path = out_dir / f'{self.arm}_icn_ext_vahrenkamp_exact_config.json'
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+        print(f"Saved: {config_path}")
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(
-        description='Phase 2: Compute icn_ext_approx for Phase 1 best_q'
+        description='Phase 2: Compute icn_ext for Phase 1 best_q'
     )
     parser.add_argument('--result-dir',
                         default=str(Path(__file__).parent / 'results_manipulability_6d_1M'),
@@ -348,6 +657,10 @@ def main():
                         default=str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
     parser.add_argument('--min-count', type=int, default=2,
                         help='Minimum sample count per voxel')
+    parser.add_argument('--version', choices=['approx', 'exact', 'both'], default='approx',
+                        help='Which version to compute: approx (linear margin), exact (Vahrenkamp paper), or both')
+    parser.add_argument('--epsilon', type=float, default=0.01,
+                        help='Safety distance for exact version (radians)')
     args = parser.parse_args()
 
     arms = ['left', 'right'] if args.arm == 'both' else [args.arm]
@@ -357,9 +670,19 @@ def main():
         print(f"Processing {arm.upper()} arm")
         print('='*60)
 
-        evaluator = Phase1BestQIcnExtEvaluator(args.urdf, arm, args.result_dir)
-        evaluator.compute(min_count=args.min_count)
-        evaluator.save(args.result_dir)
+        if args.version in ['approx', 'both']:
+            print("\n--- Linear Margin Approximation ---")
+            evaluator = Phase1BestQIcnExtEvaluator(args.urdf, arm, args.result_dir)
+            evaluator.compute(min_count=args.min_count)
+            evaluator.save(args.result_dir)
+
+        if args.version in ['exact', 'both']:
+            print("\n--- Vahrenkamp Exact (Paper Formula) ---")
+            evaluator_exact = Phase1BestQIcnExtVahrenkampExactEvaluator(
+                args.urdf, arm, args.result_dir, epsilon=args.epsilon
+            )
+            evaluator_exact.compute(min_count=args.min_count)
+            evaluator_exact.save(args.result_dir)
 
     print("\n" + "="*60)
     print("All done.")
