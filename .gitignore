@@ -10,8 +10,11 @@ venv/
 
 # Results / generated data
 workspace_analysis/results*/
+workspace_analysis/manipulability_analysis/results/
+workspace_analysis/manipulability_analysis/results_legacy/
 *.npz
 *.png
+*.npy
 
 # Large mesh files
 spirit_moz1/meshes/

@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 from single_arm_workspace import URDFKinematics
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 class KinematicsValidator:
     """验证运动学计算的正确性"""
@@ -203,6 +205,6 @@ class KinematicsValidator:
 
 
 if __name__ == '__main__':
-    urdf_path = str(Path(__file__).parent.parent / 'moz2_simplified.urdf')
+    urdf_path = str(_REPO_ROOT / 'moz2_simplified.urdf')
     validator = KinematicsValidator(urdf_path)
     validator.run_all()

@@ -17,6 +17,9 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from single_arm_workspace import URDFKinematics
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_MA_ROOT = Path(__file__).resolve().parents[1]
+
 
 # ============================================================
 # 姿态离散化: Fibonacci球面 + Roll bins
@@ -442,7 +445,7 @@ class ManipulabilityMapBuilder:
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Build 6D Manipulability Map')
-    parser.add_argument('--urdf', default=str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
+    parser.add_argument('--urdf', default=str(_REPO_ROOT / 'moz2_simplified.urdf'))
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
     parser.add_argument('--samples', type=int, default=2**17,
                         help='Number of Sobol samples (default: 2^17=131072)')
@@ -452,7 +455,7 @@ def main():
     parser.add_argument('--Lc', type=float, default=0.25)
     parser.add_argument('--metric', default='icn_6d',
                         choices=['icn_6d', 'mu_6d', 'mu_trans'])
-    parser.add_argument('--output', default=str(Path(__file__).parent / 'results_manipulability_6d'))
+    parser.add_argument('--output', default=str(_MA_ROOT / 'results'))
     parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()
 

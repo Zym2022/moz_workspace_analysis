@@ -13,6 +13,8 @@ import sys
 
 sys.path.append(str(Path(__file__).parent))
 
+_MA_ROOT = Path(__file__).resolve().parents[1]
+
 
 def load_comparison_data(result_dir: str, arm: str):
     """加载两个版本的数据进行对比，并校验一致性"""
@@ -221,7 +223,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Compare icn_ext_approx vs icn_ext_vahrenkamp_sigmoid')
     parser.add_argument('--result-dir',
-                        default=str(Path(__file__).parent / 'results_manipulability_6d_1M'))
+                        default=str(_MA_ROOT / 'results'))
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
     args = parser.parse_args()
 

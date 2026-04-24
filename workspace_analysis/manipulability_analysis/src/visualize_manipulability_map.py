@@ -12,6 +12,9 @@ import json
 from pathlib import Path
 from typing import Optional
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_MA_ROOT = Path(__file__).resolve().parents[1]
+
 
 def load_data(result_dir: str, arm: str):
     """加载投影数据"""
@@ -181,7 +184,7 @@ def visualize_all(result_dir: str, arm: str, min_count: int = 2,
 
     # 计算零位末端位置
     from single_arm_workspace import URDFKinematics
-    urdf_path = config.get('urdf_path', str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
+    urdf_path = config.get('urdf_path', str(_REPO_ROOT / 'moz2_simplified.urdf'))
     kin = URDFKinematics(urdf_path, arm)
     zero_pos, _ = kin.forward_kinematics(np.zeros(7))
     origin_label = 'waist03'
@@ -306,7 +309,7 @@ def visualize_all(result_dir: str, arm: str, min_count: int = 2,
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Visualize 6D Manipulability Map')
-    parser.add_argument('--result-dir', default=str(Path(__file__).parent / 'results_manipulability_6d'))
+    parser.add_argument('--result-dir', default=str(_MA_ROOT / 'results'))
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
     parser.add_argument('--min-count', type=int, default=2,
                         help='Minimum sample count per voxel')

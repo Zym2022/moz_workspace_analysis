@@ -15,6 +15,9 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from single_arm_workspace import URDFKinematics
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_MA_ROOT = Path(__file__).resolve().parents[1]
+
 
 def generate_all_gammas() -> np.ndarray:
     """生成 64 个 6D 运动超象限 Γ ∈ {-1,+1}^6
@@ -653,11 +656,11 @@ def main():
         description='Phase 2: Compute icn_ext for Phase 1 best_q'
     )
     parser.add_argument('--result-dir',
-                        default=str(Path(__file__).parent / 'results_manipulability_6d_1M'),
+                        default=str(_MA_ROOT / 'results'),
                         help='Phase 1 result directory')
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
     parser.add_argument('--urdf',
-                        default=str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
+                        default=str(_REPO_ROOT / 'moz2_simplified.urdf'))
     parser.add_argument('--min-count', type=int, default=2,
                         help='Minimum sample count per voxel')
     parser.add_argument('--version', choices=['approx', 'exact', 'both'], default='approx',

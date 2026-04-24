@@ -15,6 +15,9 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from visualize_manipulability_map import plot_3d_heatmap, plot_2d_slice
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_MA_ROOT = Path(__file__).resolve().parents[1]
+
 
 def load_data(result_dir: str, arm: str):
     """加载 Phase 2 数据"""
@@ -165,15 +168,15 @@ def visualize_all(result_dir: str, arm: str):
 
     # 计算零位末端位置
     from single_arm_workspace import URDFKinematics
-    urdf_path = config.get('phase1_result_dir', str(Path(__file__).parent / 'results_manipulability_6d_1M'))
+    urdf_path = config.get('phase1_result_dir', str(_MA_ROOT / 'results'))
     # 从 Phase 1 config 获取 urdf_path
     phase1_config_path = Path(result_dir) / f'{arm}_config.json'
     if phase1_config_path.exists():
         with open(phase1_config_path) as f:
             phase1_config = json.load(f)
-        urdf_path = phase1_config.get('urdf_path', str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
+        urdf_path = phase1_config.get('urdf_path', str(_REPO_ROOT / 'moz2_simplified.urdf'))
     else:
-        urdf_path = str(Path(__file__).parent.parent / 'moz2_simplified.urdf')
+        urdf_path = str(_REPO_ROOT / 'moz2_simplified.urdf')
 
     kin = URDFKinematics(urdf_path, arm)
     zero_pos, _ = kin.forward_kinematics(np.zeros(7))
@@ -241,7 +244,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Visualize Phase 2 icn_ext_approx results')
     parser.add_argument('--result-dir',
-                        default=str(Path(__file__).parent / 'results_manipulability_6d_1M'))
+                        default=str(_MA_ROOT / 'results'))
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
     args = parser.parse_args()
 

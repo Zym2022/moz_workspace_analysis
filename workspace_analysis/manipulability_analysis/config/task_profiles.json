@@ -1,0 +1,27 @@
+{
+  "lift_up": {
+    "vp": [0, 0, 1, 0, 0, 0],
+    "description": "垂直托举（waist03 +Z 方向平移）",
+    "frame": "world"
+  },
+  "reach_forward": {
+    "vp": [1, 0, 0, 0, 0, 0],
+    "description": "向前伸手（waist03 +X 方向平移）",
+    "frame": "world"
+  },
+  "handover_left": {
+    "vp": [0, 1, 0, 0, 0, 0],
+    "description": "向左侧递交（waist03 +Y 方向平移）",
+    "frame": "world"
+  },
+  "yaw_world": {
+    "vp": [0, 0, 0, 0, 0, 1],
+    "description": "绕 waist03 +Z 轴旋转（世界坐标系 yaw）",
+    "frame": "world"
+  },
+  "pitch_world": {
+    "vp": [0, 0, 0, 0, 1, 0],
+    "description": "绕 waist03 +Y 轴旋转（世界坐标系 pitch）",
+    "frame": "world"
+  }
+}
