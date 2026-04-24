@@ -315,18 +315,19 @@ optional small reservoir or quantile sketch for p50/p25
 cost_ext ≈ N * 64 * SVD(6x7)
 ```
 
-因此推荐两阶段策略：
+因此推荐代表构型优先的分阶段策略：
 
 1. **全局粗建图阶段**：对全部 Sobol 样本计算 `mu_trans`、`mu_6d`、`icn_6d`，快速建立 6D map 和候选区域。
-2. **扩展指标阶段**：对有效 voxel 的代表构型、`Q_max` 构型、边界 voxel、任务相关 voxel 计算 `icn_ext`；如果运行时间允许，再对全部样本全量计算 `icn_ext`。
+2. **扩展指标阶段**：对有效 voxel 的代表构型、`Q_max` 构型、边界 voxel、任务相关 voxel 计算 `icn_ext`。
+
+对于本项目，**不建议实施 full-sample Phase 2B**。原因是全量 `icn_ext` 需要对 1M 级样本逐个执行 `64 × SVD(6x7)`，计算量和结果管理成本都过高，而当前目标是尽快完成论文原式 representative 验证并进入任务特定分析。因此 Phase 2 以 **论文原式 representative 版本** 作为收口，不再继续扩展到 full-sample `icn_ext`。
 
 最终报告中要明确说明 `icn_ext` 的覆盖范围：
 
-- `full-sample icn_ext`：所有样本均计算扩展指标；
 - `representative icn_ext`：仅对每个 voxel 的代表/最佳构型计算；
 - `candidate-region icn_ext`：仅对候选区域加密计算。
 
-这三种结果的解释强度不同，不能混用。
+本项目当前只保留后两类结果；`full-sample icn_ext` 不作为实施目标。
 
 ### 6. 自适应加密策略
 
@@ -551,8 +552,10 @@ workspace_analysis/query_manipulability_map.py
 - 关节限位梯度惩罚；
 - 64 个 6D 超象限；
 - `icn_ext`；
-- `Q = icn_ext` 的 6D/3D 图；
+- representative 版本的 `icn_ext` 结果；
 - 与 `icn_6d` 的对比图，观察限位附近质量下降是否合理。
+
+本项目中，Phase 2 的完成标准是：**完成论文原式的 representative `icn_ext` 并完成与近似版/`icn_6d` 的对比分析**。不做 full-sample Phase 2B。
 
 ### Phase 3: 任务特定分布
 

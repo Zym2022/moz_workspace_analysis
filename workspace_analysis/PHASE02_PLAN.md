@@ -124,7 +124,7 @@
 | icn_ext (向量化批处理) | ~8 ms | ~2.2 hr |
 | icn_ext (仅 best_q, ~21万) | ~8 ms × 21万 | ~28 min |
 
-### 3.2 推荐策略：两阶段
+### 3.2 推荐策略：Representative 优先，取消 Phase 2B
 
 方案文档明确建议两阶段策略，本实施遵循该建议：
 
@@ -136,14 +136,18 @@
 - 预估时间：25-35 分钟
 - **解释限度**：该值回答的是"Phase 1 按 icn_6d 选出的最佳构型，在限位惩罚下会掉多少"，**不能**回答"这个位置在 icn_ext_approx 意义下的最优质量是多少"（因为 icn_ext_approx 最优构型可能不是 icn_6d 最优构型）
 
-**阶段 B — 全量 icn_ext_approx（可选，视需求）**
+**项目决策：不实施阶段 B（full-sample icn_ext_approx）**
 
-- 对全部 1M 样本计算 icn_ext_approx，替代 icn_6d 作为主指标
-- 重建完整 6D map，获得 Q_pos_max / Q_pos_p50 等全套统计
-- 预估时间：2-3 小时（向量化后）
-- 解释强度：`full-sample icn_ext_approx`，统计意义完整
+- 原因：全量 `icn_ext` 需要对 1M 样本逐个计算 64 个超象限 SVD，计算量和结果管理成本都过高
+- 即使完成全量计算，其主要收益也是把 Phase 1 的 `icn_6d` 主指标整体替换为 `icn_ext`，但当前项目更紧迫的目标是完成论文原式验证并进入任务特定分析
+- 因此 **Phase 2 的收口条件** 定义为：完成论文原式的 representative 版本，并与当前 `icn_ext_approx_of_phase1_best_q` 做对比
 
-**本次实施范围：阶段 A。** 阶段 B 视审核反馈和实际需求决定。
+**后续顺序固定为：**
+
+1. 完成阶段 A 的当前近似版结果整理
+2. 实现论文原式 `icn_ext_vahrenkamp_exact_of_phase1_best_q`
+3. 完成近似版 vs 论文原式的 representative 对比分析
+4. 直接进入 Phase 3 task-specific 分析
 
 ---
 
@@ -155,7 +159,7 @@
 workspace_analysis/
 ├── compute_icn_ext.py              # [新增] icn_ext 核心算法 + representative 计算
 ├── visualize_icn_ext.py            # [新增] icn_ext 可视化 + 对比图
-├── build_manipulability_map.py     # [小改] 可选集成 icn_ext 到全量流程
+├── build_manipulability_map.py     # [不改] 本阶段不集成 full-sample icn_ext
 ├── single_arm_workspace.py         # [不改]
 └── visualize_manipulability_map.py # [不改]
 ```
@@ -394,14 +398,14 @@ results_manipulability_6d_1M/
 
 - **Phase 1 best_q 评估的局限**：阶段 A 输出的 `icn_ext_approx_of_phase1_best_q` 只反映"Phase 1 按 icn_6d 选出的最佳构型在限位惩罚下的质量"，**不能**回答"这个位置在 icn_ext_approx 意义下的最优质量是多少"（因为 icn_ext_approx 最优构型可能不是 icn_6d 最优构型）
 - **与 Phase 1 的 Q_pos_max 关系**：Phase 1 的 Q_pos_max 是 icn_6d 的 max over orientations；Phase 2 的 icn_ext_approx_of_phase1_best_q 是对该 max 对应构型重新评估。两者不能直接做 max/p50 等统计比较
-- **报告中必须标明**：`icn_ext_approx (linear margin approx, Phase 1 best_q only)` vs `full-sample icn_ext_approx`
+- **报告中必须标明**：`icn_ext_approx (linear margin approx, Phase 1 best_q only)`；本项目不提供 `full-sample icn_ext_approx`
 
 ### 7.3 后续扩展
 
 - **障碍惩罚 O_Γ**：Phase 4 碰撞检查完成后，需要重新设计 O_Γ 的构造方式（基于碰撞距离、方向相关），再扩展为 `J̃_Γ = L_Γ ⊙ O_Γ ⊙ Jw`。当前阶段无实际接口预留
-- **全量 icn_ext_approx**：阶段 B，需要向量化优化或并行计算
-- **任务特定 icn_ext_approx**：Phase 3 的 task-specific 指标可基于 icn_ext_approx 而非 icn_6d
-- **论文原式实现**：详见 §9 备选方案
+- **Phase 2 收口版本**：完成论文原式 representative 指标，输出 `icn_ext_vahrenkamp_exact_of_phase1_best_q`
+- **任务特定 icn_ext**：Phase 3 的 task-specific 指标优先基于 representative 版 `icn_ext_vahrenkamp_exact`
+- **全量 icn_ext_approx / icn_ext_exact**：当前项目明确不做，原因是计算量过大且对进入任务分析的边际收益有限
 
 ---
 
@@ -418,7 +422,7 @@ results_manipulability_6d_1M/
 
 ---
 
-**方案结束。待审核确认后开始实施。**
+**方案结束。当前决定为：不实施 Phase 2B；完成论文原式 representative 版本后直接进入 Phase 3。**
 
 ---
 
