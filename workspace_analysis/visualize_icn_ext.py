@@ -163,6 +163,22 @@ def visualize_all(result_dir: str, arm: str):
     data, config = load_data(result_dir, arm)
     out_dir = Path(result_dir)
 
+    # 计算零位末端位置
+    from single_arm_workspace import URDFKinematics
+    urdf_path = config.get('phase1_result_dir', str(Path(__file__).parent / 'results_manipulability_6d_1M'))
+    # 从 Phase 1 config 获取 urdf_path
+    phase1_config_path = Path(result_dir) / f'{arm}_config.json'
+    if phase1_config_path.exists():
+        with open(phase1_config_path) as f:
+            phase1_config = json.load(f)
+        urdf_path = phase1_config.get('urdf_path', str(Path(__file__).parent.parent / 'moz2_simplified.urdf'))
+    else:
+        urdf_path = str(Path(__file__).parent.parent / 'moz2_simplified.urdf')
+
+    kin = URDFKinematics(urdf_path, arm)
+    zero_pos, _ = kin.forward_kinematics(np.zeros(7))
+    origin_label = 'waist03'
+
     positions = data['positions']
     icn_ext_approx = data['icn_ext_approx']
     icn_6d = data['icn_6d_at_best_q']
@@ -185,6 +201,7 @@ def visualize_all(result_dir: str, arm: str):
         output_path=out_dir / f'{arm}_icn_ext_approx.png',
         cmap='plasma',
         alpha=0.4,
+        origin_label=origin_label, zero_config_pos=zero_pos,
     )
 
     # 2. 对比散点图
@@ -208,6 +225,7 @@ def visualize_all(result_dir: str, arm: str):
         cbar_label='icn_ext_approx',
         output_path=out_dir / f'{arm}_icn_ext_approx_slice_z.png',
         cmap='plasma',
+        origin_label=origin_label, zero_config_pos=zero_pos,
     )
 
     # 5. 惩罚分析图

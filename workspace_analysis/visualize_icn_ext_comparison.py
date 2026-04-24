@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 2: 对比 icn_ext_approx vs icn_ext_vahrenkamp_exact
+Phase 2: 对比 icn_ext_approx vs icn_ext_vahrenkamp_sigmoid
 """
 
 import numpy as np
@@ -15,22 +15,42 @@ sys.path.append(str(Path(__file__).parent))
 
 
 def load_comparison_data(result_dir: str, arm: str):
-    """加载两个版本的数据进行对比"""
+    """加载两个版本的数据进行对比，并校验一致性"""
     # 加载 approx 版本
     approx_data = np.load(Path(result_dir) / f'{arm}_icn_ext_approx_of_phase1_best_q.npz')
     with open(Path(result_dir) / f'{arm}_icn_ext_config.json') as f:
         approx_config = json.load(f)
 
-    # 加载 exact 版本
-    exact_data = np.load(Path(result_dir) / f'{arm}_icn_ext_vahrenkamp_exact_of_phase1_best_q.npz')
-    with open(Path(result_dir) / f'{arm}_icn_ext_vahrenkamp_exact_config.json') as f:
-        exact_config = json.load(f)
+    # 加载 sigmoid 版本
+    sigmoid_data = np.load(Path(result_dir) / f'{arm}_icn_ext_vahrenkamp_sigmoid_of_phase1_best_q.npz')
+    with open(Path(result_dir) / f'{arm}_icn_ext_vahrenkamp_sigmoid_config.json') as f:
+        sigmoid_config = json.load(f)
 
-    return approx_data, exact_data, approx_config, exact_config
+    # 校验一致性
+    approx_pos = approx_data['positions']
+    sigmoid_pos = sigmoid_data['positions']
+
+    if len(approx_pos) != len(sigmoid_pos):
+        raise ValueError(
+            f"Voxel count mismatch: approx has {len(approx_pos)}, sigmoid has {len(sigmoid_pos)}. "
+            f"Check min_count: approx={approx_config.get('min_count')}, sigmoid={sigmoid_config.get('min_count')}"
+        )
+
+    # 校验 positions 完全一致（允许浮点误差）
+    if not np.allclose(approx_pos, sigmoid_pos, atol=1e-10):
+        raise ValueError(
+            f"Positions mismatch between approx and sigmoid. "
+            f"Max diff: {np.abs(approx_pos - sigmoid_pos).max():.2e}. "
+            f"The two runs must use identical Phase 1 data and min_count."
+        )
+
+    print(f"Consistency check passed: {len(approx_pos)} voxels, positions match.")
+
+    return approx_data, sigmoid_data, approx_config, sigmoid_config
 
 
 def plot_approx_vs_exact_scatter(approx, exact, joint_margin_min, arm, output_path):
-    """散点图：x=icn_ext_approx, y=icn_ext_vahrenkamp_exact"""
+    """散点图：x=icn_ext_approx, y=icn_ext_vahrenkamp_sigmoid"""
     fig, ax = plt.subplots(figsize=(9, 8))
 
     sc = ax.scatter(approx, exact, c=joint_margin_min,
@@ -42,7 +62,7 @@ def plot_approx_vs_exact_scatter(approx, exact, joint_margin_min, arm, output_pa
     ax.plot([0, lim], [0, lim], 'k--', lw=1, alpha=0.5, label='y = x')
 
     ax.set_xlabel('icn_ext_approx (linear margin)', fontsize=12)
-    ax.set_ylabel('icn_ext_vahrenkamp_exact (paper formula)', fontsize=12)
+    ax.set_ylabel('icn_ext_vahrenkamp_sigmoid (paper formula)', fontsize=12)
     ax.set_title(f'{arm.capitalize()} Arm: Approx vs Exact\n'
                  f'color = joint_margin_min',
                  fontsize=12)
@@ -89,7 +109,7 @@ def plot_diff_3d(positions, approx, exact, arm, output_path, elev=25, azim=-60):
     ax.set_xlabel('X (m)', fontsize=11)
     ax.set_ylabel('Y (m)', fontsize=11)
     ax.set_zlabel('Z (m)', fontsize=11)
-    ax.set_title(f'{arm.capitalize()} Arm: icn_ext_vahrenkamp_exact - icn_ext_approx\n'
+    ax.set_title(f'{arm.capitalize()} Arm: icn_ext_vahrenkamp_sigmoid - icn_ext_approx\n'
                  f'red = exact > approx, blue = approx > exact',
                  fontsize=12, pad=15)
     ax.set_box_aspect([1, 1, 1])
@@ -159,38 +179,38 @@ def plot_diff_vs_margin(joint_margin_min, approx, exact, arm, output_path):
 
 def visualize_comparison(result_dir: str, arm: str):
     """生成对比可视化"""
-    approx_data, exact_data, approx_config, exact_config = load_comparison_data(result_dir, arm)
+    approx_data, sigmoid_data, approx_config, sigmoid_config = load_comparison_data(result_dir, arm)
     out_dir = Path(result_dir)
 
     positions = approx_data['positions']
     icn_ext_approx = approx_data['icn_ext_approx']
-    icn_ext_exact = exact_data['icn_ext_vahrenkamp_exact']
+    icn_ext_sigmoid = sigmoid_data['icn_ext_vahrenkamp_sigmoid']
     joint_margin_min = approx_data['joint_margin_min']
 
     print(f"\n{arm.capitalize()} Arm Comparison")
     print(f"  Voxels: {len(positions)}")
     print(f"  icn_ext_approx: [{icn_ext_approx.min():.4f}, {icn_ext_approx.max():.4f}]")
-    print(f"  icn_ext_exact: [{icn_ext_exact.min():.4f}, {icn_ext_exact.max():.4f}]")
-    diff = icn_ext_exact - icn_ext_approx
+    print(f"  icn_ext_sigmoid: [{icn_ext_sigmoid.min():.4f}, {icn_ext_sigmoid.max():.4f}]")
+    diff = icn_ext_sigmoid - icn_ext_approx
     print(f"  diff (exact - approx): mean={diff.mean():.4f}, std={diff.std():.4f}")
-    print(f"  exact > approx: {(icn_ext_exact > icn_ext_approx).sum()} ({100*(icn_ext_exact > icn_ext_approx).sum()/len(icn_ext_approx):.1f}%)")
-    print(f"  correlation: {np.corrcoef(icn_ext_approx, icn_ext_exact)[0,1]:.3f}")
+    print(f"  exact > approx: {(icn_ext_sigmoid > icn_ext_approx).sum()} ({100*(icn_ext_sigmoid > icn_ext_approx).sum()/len(icn_ext_approx):.1f}%)")
+    print(f"  correlation: {np.corrcoef(icn_ext_approx, icn_ext_sigmoid)[0,1]:.3f}")
 
     # 1. 散点图对比
     plot_approx_vs_exact_scatter(
-        icn_ext_approx, icn_ext_exact, joint_margin_min,
+        icn_ext_approx, icn_ext_sigmoid, joint_margin_min,
         arm, out_dir / f'{arm}_icn_ext_approx_vs_exact_scatter.png'
     )
 
     # 2. 差值 3D 图
     plot_diff_3d(
-        positions, icn_ext_approx, icn_ext_exact,
+        positions, icn_ext_approx, icn_ext_sigmoid,
         arm, out_dir / f'{arm}_icn_ext_approx_vs_exact_diff_3d.png'
     )
 
     # 3. 差值 vs 裕度分析
     plot_diff_vs_margin(
-        joint_margin_min, icn_ext_approx, icn_ext_exact,
+        joint_margin_min, icn_ext_approx, icn_ext_sigmoid,
         arm, out_dir / f'{arm}_icn_ext_approx_vs_exact_margin_analysis.png'
     )
 
@@ -199,7 +219,7 @@ def visualize_comparison(result_dir: str, arm: str):
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Compare icn_ext_approx vs icn_ext_vahrenkamp_exact')
+    parser = argparse.ArgumentParser(description='Compare icn_ext_approx vs icn_ext_vahrenkamp_sigmoid')
     parser.add_argument('--result-dir',
                         default=str(Path(__file__).parent / 'results_manipulability_6d_1M'))
     parser.add_argument('--arm', choices=['left', 'right', 'both'], default='both')
