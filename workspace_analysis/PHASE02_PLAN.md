@@ -139,15 +139,15 @@
 **项目决策：不实施阶段 B（full-sample icn_ext_approx）**
 
 - 原因：全量 `icn_ext` 需要对 1M 样本逐个计算 64 个超象限 SVD，计算量和结果管理成本都过高
-- 即使完成全量计算，其主要收益也是把 Phase 1 的 `icn_6d` 主指标整体替换为 `icn_ext`，但当前项目更紧迫的目标是完成论文原式验证并进入任务特定分析
-- 因此 **Phase 2 的收口条件** 定义为：完成论文原式的 representative 版本，并与当前 `icn_ext_approx_of_phase1_best_q` 做对比
+- 即使完成全量计算，其主要收益也是把 Phase 1 的 `icn_6d` 主指标整体替换为 `icn_ext`，但当前项目更紧迫的目标是尽快进入任务特定分析
+- 因此 **Phase 2 的收口条件** 定义为：接受当前 representative 扩展指标对比结果作为工程完成状态
 
 **后续顺序固定为：**
 
 1. 完成阶段 A 的当前近似版结果整理
-2. 实现论文原式 `icn_ext_vahrenkamp_exact_of_phase1_best_q`
-3. 完成近似版 vs 论文原式的 representative 对比分析
-4. 直接进入 Phase 3 task-specific 分析
+2. 完成 representative 扩展指标版本的对比分析
+3. 直接进入 Phase 3 task-specific 分析
+4. Phase 3 作为项目最终阶段，不再继续后续扩展
 
 ---
 
@@ -402,10 +402,10 @@ results_manipulability_6d_1M/
 
 ### 7.3 后续扩展
 
-- **障碍惩罚 O_Γ**：Phase 4 碰撞检查完成后，需要重新设计 O_Γ 的构造方式（基于碰撞距离、方向相关），再扩展为 `J̃_Γ = L_Γ ⊙ O_Γ ⊙ Jw`。当前阶段无实际接口预留
-- **Phase 2 收口版本**：完成论文原式 representative 指标，输出 `icn_ext_vahrenkamp_exact_of_phase1_best_q`
-- **任务特定 icn_ext**：Phase 3 的 task-specific 指标优先基于 representative 版 `icn_ext_vahrenkamp_exact`
-- **全量 icn_ext_approx / icn_ext_exact**：当前项目明确不做，原因是计算量过大且对进入任务分析的边际收益有限
+- **Phase 2 收口版本**：接受当前 representative 扩展指标对比结果作为工程完成状态
+- **任务特定 icn_ext**：Phase 3 的 task-specific 指标基于当前已完成的 representative 扩展指标结果推进
+- **全量 icn_ext_approx / icn_ext_exact**：当前项目明确不做，原因是计算量过大且对任务分析的边际收益有限
+- **障碍惩罚 O_Γ / Phase 4 碰撞检查**：不纳入本项目范围
 
 ---
 
@@ -422,7 +422,7 @@ results_manipulability_6d_1M/
 
 ---
 
-**方案结束。当前决定为：不实施 Phase 2B；完成论文原式 representative 版本后直接进入 Phase 3。**
+**方案结束。当前决定为：不实施 Phase 2B；直接进入并完成 Phase 3，且 Phase 3 作为本项目最终阶段。**
 
 ---
 

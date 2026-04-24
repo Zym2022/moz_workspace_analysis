@@ -555,7 +555,7 @@ workspace_analysis/query_manipulability_map.py
 - representative 版本的 `icn_ext` 结果；
 - 与 `icn_6d` 的对比图，观察限位附近质量下降是否合理。
 
-本项目中，Phase 2 的完成标准是：**完成论文原式的 representative `icn_ext` 并完成与近似版/`icn_6d` 的对比分析**。不做 full-sample Phase 2B。
+本项目中，Phase 2 的完成标准调整为：**接受现有 representative 扩展指标对比结果作为工程完成状态**。不做 full-sample Phase 2B，也不再继续追求更重的扩展指标实现。下一步直接进入 **Phase 3**，并将其作为本项目的最终交付阶段。
 
 ### Phase 3: 任务特定分布
 
@@ -571,7 +571,9 @@ workspace_analysis/query_manipulability_map.py
 
 输出每个任务方向的 heatmap，并保留最佳构型。
 
-### Phase 4: 碰撞/自距离
+**本项目决策：Phase 3 是最终阶段。** Phase 3 完成后即结束本轮工作空间分析，不再继续做 Phase 4 或其他扩展项。
+
+### Phase 4: 碰撞/自距离（不纳入本项目）
 
 如果要宣称“完整灵巧操作空间”，最终应加入至少硬碰撞过滤：
 
@@ -580,6 +582,12 @@ workspace_analysis/query_manipulability_map.py
 - 环境障碍可选。
 
 如果只做无碰撞运动学工作空间，报告标题中应明确写“kinematic, collision-unchecked”。
+
+对于当前项目，这一阶段**明确不做**。当前成果定位为：
+
+- 固定腰腿条件下的单臂运动学工作空间；
+- 基于 representative 构型的扩展指标分析；
+- 基于任务方向的 task-specific heatmap。
 
 ## 推荐输出目录结构
 
