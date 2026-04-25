@@ -1,0 +1,65 @@
+{
+  "default_profile": "analysis_default",
+  "units": "radian",
+  "notes": [
+    "These profiles define analysis sampling ranges, not dynamics or stability validation.",
+    "Use analysis_default for the first 10-DoF base_link workspace report.",
+    "Run reachability analysis before manipulability analysis.",
+    "Use finer spatial resolution only after voxel density is verified at 0.05 m.",
+    "Coordinate convention: base_link +X = robot left, +Y = robot rear, +Z = up, forward = -Y.",
+    "Reachability generation should sample within these joint ranges and should not apply additional semantic posture filters."
+  ],
+  "profiles": {
+    "analysis_default": {
+      "description": "Default waist-leg sampling range for reachability-first 10-DoF kinematic analysis.",
+      "joint_limits": {
+        "LegWaist-1": [0.0, 1.570796327],
+        "LegWaist-2": [-1.570796327, 0.017453293],
+        "LegWaist-3": [-0.05, 0.85]
+      },
+      "filters": {},
+      "voxel": {
+        "position_resolution": 0.05,
+        "fine_position_resolution": 0.04,
+        "n_approach": 60,
+        "n_roll": 8,
+        "min_total_count": 5,
+        "min_orientation_cells": 2
+      }
+    },
+    "wider_kinematic": {
+      "description": "Wider waist-leg sampling range for sensitivity checks.",
+      "joint_limits": {
+        "LegWaist-1": [-0.70, 0.70],
+        "LegWaist-2": [-1.20, 0.017453293],
+        "LegWaist-3": [-0.10, 1.10]
+      },
+      "filters": {},
+      "voxel": {
+        "position_resolution": 0.05,
+        "fine_position_resolution": 0.04,
+        "n_approach": 60,
+        "n_roll": 8,
+        "min_total_count": 5,
+        "min_orientation_cells": 2
+      }
+    },
+    "full_urdf": {
+      "description": "Raw URDF limits for upper-bound diagnostics only; not recommended as the main report profile.",
+      "joint_limits": {
+        "LegWaist-1": [-1.570796327, 1.570796327],
+        "LegWaist-2": [-2.530727415, 0.017453293],
+        "LegWaist-3": [-0.174532925, 1.396263402]
+      },
+      "filters": {},
+      "voxel": {
+        "position_resolution": 0.05,
+        "fine_position_resolution": 0.04,
+        "n_approach": 60,
+        "n_roll": 8,
+        "min_total_count": 5,
+        "min_orientation_cells": 2
+      }
+    }
+  }
+}
