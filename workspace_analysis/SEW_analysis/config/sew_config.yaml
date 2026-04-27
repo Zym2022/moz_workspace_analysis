@@ -1,0 +1,80 @@
+{
+  "robot": {
+    "urdf_path": "../../moz2_simplified.urdf",
+    "arm_side": "left",
+    "ee_offset": [-0.008, 0.0, -0.100]
+  },
+  "sew_points": {
+    "shoulder_joint_index": 1,
+    "elbow_joint_index": 3,
+    "wrist_joint_index": 6
+  },
+  "roi": {
+    "trapezoid": [
+      [-0.1, 0.0],
+      [0.8, 0.0],
+      [0.6, -0.6],
+      [-0.1, -0.6]
+    ],
+    "y_range": [-0.6, 0.0],
+    "z_range": [-0.5, 0.2],
+    "x_min": -0.1,
+    "voxel_size": 0.05
+  },
+  "task_orientations": {
+    "q_natural_deg": [-9, -45, -45, -90, 0, 10, 0],
+    "R_natural": [
+      [0.4056, 0.7071, 0.5792],
+      [-0.7456, -0.1106, 0.6571],
+      [0.5287, -0.6984, 0.4824]
+    ],
+    "roll_deg": [-60, -30, 0, 30, 60],
+    "base_poses": {
+      "natural": {
+        "R": [
+          [0.4056, 0.7071, 0.5792],
+          [-0.7456, -0.1106, 0.6571],
+          [0.5287, -0.6984, 0.4824]
+        ]
+      },
+      "tip_crossbody": {
+        "R": [
+          [0, 0, 1],
+          [-1, 0, 0],
+          [0, -1, 0]
+        ]
+      },
+      "tip_forward": {
+        "R": [
+          [1, 0, 0],
+          [0, 0, 1],
+          [0, -1, 0]
+        ]
+      },
+      "tip_down": {
+        "R": [
+          [0, 1, 0],
+          [-1, 0, 0],
+          [0, 0, 1]
+        ]
+      }
+    }
+  },
+  "sampling": {
+    "n_fk_samples": 200000,
+    "quick_test_n_fk_samples": 10000,
+    "seed": 42
+  },
+  "ik": {
+    "max_iter": 50,
+    "pos_tol": 1.0e-4,
+    "rot_tol": 1.0e-3,
+    "damping": 0.01
+  },
+  "sew": {
+    "collinearity_threshold": 0.01
+  },
+  "reference": {
+    "q_zero_ee_waist03": [0.212, -0.025, -0.818]
+  }
+}
