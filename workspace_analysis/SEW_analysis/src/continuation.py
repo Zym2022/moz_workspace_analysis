@@ -34,9 +34,12 @@ def nullspace_step(kin: SEWKinematics, q: np.ndarray, ds: float,
     """Take one predictor step along the 1D Jacobian nullspace."""
     J = kin.jacobian(q)
     sigma_min, sigma_max, icn_6d, null_vec = sigma_metrics(J)
-    if previous_tangent is not None and np.dot(null_vec, previous_tangent) < 0.0:
-        null_vec = -null_vec
-    tangent = sign * null_vec
+    if previous_tangent is not None:
+        if np.dot(null_vec, previous_tangent) < 0.0:
+            null_vec = -null_vec
+        tangent = null_vec
+    else:
+        tangent = sign * null_vec
     q_pred = q + ds * tangent
     return q_pred, sigma_min, icn_6d, tangent
 
@@ -282,9 +285,13 @@ def aggregate_target_metrics(branches: List[Dict]) -> Dict:
         }
 
     branch_summaries = [summarize_branch(branch) for branch in branches]
+    all_psi = np.concatenate([
+        np.array([pt['psi'] for pt in branch['curve']], dtype=float)
+        for branch in branches
+    ])
     return {
         'branch_count': len(branches),
-        'psi_width': float(np.max([item['psi_width'] for item in branch_summaries])),
+        'psi_width': compute_psi_width(all_psi),
         'elbow_curve_length': float(np.max([item['elbow_curve_length'] for item in branch_summaries])),
         'joint_margin_min': float(np.min([item['joint_margin_min'] for item in branch_summaries])),
         'joint_margin_p25': float(np.min([item['joint_margin_p25'] for item in branch_summaries])),
