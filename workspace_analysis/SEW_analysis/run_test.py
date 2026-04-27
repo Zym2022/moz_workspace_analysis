@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Quick test version with coarse grid and single orientation."""
+"""Quick test version with coarse grid and optional Phase C smoke test."""
 
+import argparse
 import sys
 from pathlib import Path
 import numpy as np
@@ -8,6 +9,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from config_io import load_config
+from continuation import analyze_target
 from kinematics import SEWKinematics
 from roi import generate_roi_grid
 from sew import compute_sew_angle, compute_stereographic_sew
@@ -21,7 +23,52 @@ from visualize import (
 )
 
 
+def run_phase_c_smoke(kin, fk_data, seed_db, roi_grid, target_name, target_R, config):
+    """Run a tiny continuation smoke test on a few reachable quick-test voxels."""
+    print("Running Phase C smoke test...")
+    continuation_cfg = config['continuation']
+    analyzed = 0
+
+    for p_target in roi_grid:
+        q0_candidates = []
+        seeds = seed_db.retrieve(p_target, k=3, max_dist=0.15)
+        for seed_idx in seeds:
+            q_seed = fk_data['q_samples'][seed_idx]
+            q_refined, success, _ = ik_refine(
+                kin, q_seed, p_target, target_R,
+                max_iter=30, pos_tol=1e-4, rot_tol=1e-3, damping=0.01
+            )
+            if success and q_refined is not None:
+                q0_candidates.append(q_refined)
+
+        if not q0_candidates:
+            continue
+
+        result = analyze_target(kin, p_target, target_R, q0_candidates, continuation_cfg)
+        assert result['branch_count'] >= 1, result
+        assert result['failure_reason'] in {
+            'loop_closed', 'max_arc_length', 'max_steps_reached', 'joint_limit',
+            'kinematic_singular', 'sew_collinear', 'ik_correction_failed', 'unreachable'
+        }, result['failure_reason']
+        assert np.isfinite(result['psi_width']) or result['branch_count'] == 0, result['psi_width']
+
+        analyzed += 1
+        print(
+            f"  smoke target {analyzed}: branches={result['branch_count']}, "
+            f"psi_width={result['psi_width']:.3f}, reason={result['failure_reason']}"
+        )
+        if analyzed >= 3:
+            break
+
+    assert analyzed >= 1, "Phase C smoke test found no analyzable reachable target"
+    print("Phase C smoke test complete.\n")
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--phase-c', action='store_true', help='Also run Phase C smoke test')
+    args = parser.parse_args()
+
     print("=== SEW Analysis Phase A+B (Quick Test) ===\n")
     base_dir = Path(__file__).resolve().parent
 
@@ -123,6 +170,9 @@ def main():
         fk_data['p_ee'][roi_indices], q_zero_ee,
         output_path=str(figures_dir / "roi_position_seed_coverage_from_fk_samples__quick.png")
     )
+
+    if args.phase_c:
+        run_phase_c_smoke(kin, fk_data, seed_db, roi_grid, target_name, target_R, config)
 
     print("=== Phase A+B Test Complete ===")
     print(f"Results: {figures_dir}")

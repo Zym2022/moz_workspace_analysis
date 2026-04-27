@@ -74,6 +74,22 @@
   "sew": {
     "collinearity_threshold": 0.01
   },
+  "continuation": {
+    "ds": 0.05,
+    "max_steps": 200,
+    "max_arc_length": 10.0,
+    "loop_closure_tol": 0.08,
+    "branch_merge_tol": 0.12,
+    "singular_sigma_thresh": 0.02,
+    "joint_margin_thresh": 0.02,
+    "collinear_thresh": 0.01,
+    "ik_correction_max_iter": 20,
+    "ik_correction_pos_tol": 5.0e-4,
+    "ik_correction_rot_tol": 2.0e-3,
+    "ik_correction_damping": 0.02,
+    "n_seeds_per_target": 5,
+    "save_curves": true
+  },
   "reference": {
     "q_zero_ee_waist03": [0.212, -0.025, -0.818]
   }
