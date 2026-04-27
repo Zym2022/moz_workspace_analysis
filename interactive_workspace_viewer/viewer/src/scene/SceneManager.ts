@@ -6,6 +6,7 @@ export class SceneManager {
   public camera: THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
   public controls: OrbitControls;
+  public onBeforeRender: (() => void) | null = null;
 
   private container: HTMLElement;
   private animationId: number = 0;
@@ -67,6 +68,7 @@ export class SceneManager {
   start() {
     const loop = () => {
       this.animationId = requestAnimationFrame(loop);
+      if (this.onBeforeRender) this.onBeforeRender();
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     };

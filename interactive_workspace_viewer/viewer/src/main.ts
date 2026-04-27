@@ -3,9 +3,12 @@ import { RobotSkeleton } from './scene/RobotSkeleton.ts';
 import { HullMesh } from './scene/HullMesh.ts';
 import { FrameAxes } from './scene/FrameAxes.ts';
 import { ZUpGrid } from './scene/GridHelper.ts';
+import { TaskPointMarker } from './scene/TaskPointMarker.ts';
 import { InfoOverlay } from './ui/InfoOverlay.ts';
 import { ControlPanel } from './ui/ControlPanel.ts';
 import { StatusPanel } from './ui/StatusPanel.ts';
+import { CameraPresets } from './ui/CameraPresets.ts';
+import { TaskPointPanel } from './ui/TaskPointPanel.ts';
 import { loadSkeleton } from './loaders/SkeletonLoader.ts';
 import { loadHull } from './loaders/HullLoader.ts';
 import { loadJointLimits } from './loaders/JointLimitsLoader.ts';
@@ -74,6 +77,20 @@ async function main() {
   // 8. Status panel
   const statusPanel = new StatusPanel();
 
+  // 8b. Task target point: marker (scene) + panel (top-left)
+  const taskMarker = new TaskPointMarker(
+    sceneManager.camera,
+    sceneManager.renderer,
+    sceneManager.controls,
+    sceneManager.scene,
+  );
+  sceneManager.scene.add(taskMarker.group);
+  taskMarker.setPosition([0, 0, 0.8]);
+  taskMarker.setVisible(true);
+  taskMarker.setPreviewMode(true);
+
+  const taskPanel = new TaskPointPanel();
+
   // 9. Update function
   function updateAll() {
     const result = fk.compute(jointState);
@@ -84,8 +101,37 @@ async function main() {
       leftMesh?.update(w03);
       rightMesh?.update(w03);
     }
-    statusPanel.update(result, jointState);
+    const taskPos = taskPanel.isPlaced() ? taskPanel.getPosition() : null;
+    statusPanel.update(result, jointState, taskPos);
   }
+
+  // Bidirectional sync between panel and 3D marker
+  let syncing = false;
+  taskPanel.onPositionChange = (pos) => {
+    if (syncing) return;
+    syncing = true;
+    taskMarker.setPosition(pos);
+    syncing = false;
+    updateAll();
+  };
+  taskMarker.onDrag = (pos) => {
+    if (syncing) return;
+    syncing = true;
+    taskPanel.updatePosition(pos);
+    syncing = false;
+    updateAll();
+  };
+  taskPanel.onPlace = () => {
+    taskMarker.setVisible(true);
+    taskMarker.setPreviewMode(false);
+    taskMarker.setDraggable(true);
+    updateAll();
+  };
+  taskPanel.onRemove = () => {
+    taskMarker.setVisible(false);
+    taskMarker.setDraggable(false);
+    updateAll();
+  };
 
   // 10. Control panel
   if (jointLimits) {
@@ -98,13 +144,19 @@ async function main() {
     console.warn('[Viewer] No joint limits loaded; ControlPanel disabled.');
   }
 
-  // 11. Initial update + FK verification
+  // 11. Camera presets
+  const cameraPresets = new CameraPresets(sceneManager.camera, sceneManager.controls);
+  sceneManager.onBeforeRender = () => {
+    cameraPresets.update();
+  };
+
+  // 12. Initial update + FK verification
   updateAll();
   verifyZeroPoseFK(fk);
 
-  // 12. Start render loop
+  // 13. Start render loop
   sceneManager.start();
-  console.log('[Viewer] MOZ2 Workspace Viewer Phase 2 started.');
+  console.log('[Viewer] MOZ2 Workspace Viewer Phase 3.1 started.');
 }
 
 function verifyZeroPoseFK(fk: ForwardKinematics) {

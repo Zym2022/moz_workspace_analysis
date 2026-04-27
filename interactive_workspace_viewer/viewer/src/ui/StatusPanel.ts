@@ -25,7 +25,7 @@ export class StatusPanel {
     document.body.appendChild(this.container);
   }
 
-  update(fk: FKResult, jointState: JointState) {
+  update(fk: FKResult, jointState: JointState, taskPoint?: [number, number, number] | null) {
     const lines: string[] = [];
 
     // Joint angles
@@ -55,6 +55,12 @@ export class StatusPanel {
       }
       lines.push(
         `waist03 rpy: [${(roll * RAD2DEG).toFixed(2)}°, ${(pitch * RAD2DEG).toFixed(2)}°, ${(yaw * RAD2DEG).toFixed(2)}°]`,
+      );
+    }
+
+    if (taskPoint) {
+      lines.push(
+        `task point: [${taskPoint[0].toFixed(4)}, ${taskPoint[1].toFixed(4)}, ${taskPoint[2].toFixed(4)}]`,
       );
     }
 

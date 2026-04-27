@@ -7,7 +7,7 @@ export class FrameAxes {
   public group: THREE.Group;
   private triads: Map<string, THREE.Group>;
 
-  constructor(skeleton: SkeletonData) {
+  constructor(_skeleton: SkeletonData) {
     this.group = new THREE.Group();
     this.group.name = 'FrameAxes';
     this.triads = new Map();
