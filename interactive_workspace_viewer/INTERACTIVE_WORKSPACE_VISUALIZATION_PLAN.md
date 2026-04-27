@@ -557,11 +557,185 @@ Stability unchecked
 Hull interior may include unreachable points
 ```
 
-## 11. 后续值得完善的功能
+## 11. Phase 3.5：参数化几何 what-if
+
+Phase 3 完成后、进入 Phase 4 的 voxel / 剖切 / 指标层之前，应先补充参数化几何修改能力。该能力服务于机械设计 what-if：在保持运动链拓扑不变的前提下，修改少量关键尺寸，观察 skeleton、采样点和可达凸包的变化。
+
+该功能不应理解为任意 URDF/DH 编辑器。第一版只开放 8 个设计参数，并把它们映射到 URDF joint origin。所有参数内部统一使用 meter，UI 可以显示为 mm。
+
+### 11.1 开放参数
+
+| 参数 | 默认值 | URDF 映射 | 是否改变 arm hull 形状 |
+|---|---:|---|---|
+| `arm_upper_z_total` | `0.334` | `LeftArm-2.z + LeftArm-3.z`，右臂同步 | 是 |
+| `arm_elbow_y_offset` | `0.025` | `LeftArm-3.y = -offset`，`RightArm-3.y = +offset` | 是 |
+| `arm_forearm_z_total` | `0.334` | `LeftArm-4.z + LeftArm-5.z`，右臂同步 | 是 |
+| `arm_wrist_z` | `0.050` | `LeftArm-6.z = -value`，右臂同步 | 是 |
+| `arm_shoulder_x_total` | `0.220` | `LeftArm-0.x + LeftArm-1.x`，右臂镜像同步 | 否 |
+| `legwaist2_z` | `0.3585` | `LegWaist-2.z` | 否 |
+| `legwaist3_z` | `0.3585` | `LegWaist-3.z` | 否 |
+| `waist_top_z_total` | `0.333` | `waist02_fixed.z + waist03_fixed.z` | 否 |
+
+注意：
+
+- `0.126 + 0.208 = 0.334 m`，`0.130 + 0.204 = 0.334 m`。
+- 左右臂参数必须同步修改，并保持左右镜像关系。
+- 修改参数时不应立即触发重算。用户完成一组修改后，点击 `Apply / Recompute` 才应用到 active 参数并触发必要计算。
+
+### 11.2 聚合尺寸的拆分策略
+
+对于“两个 origin 的和可修改，分别数值不重要”的参数，仍应使用稳定拆分策略，避免中间 joint 在可视化中发生不必要跳变。第一版建议保持 URDF 原始比例：
+
+```text
+arm_upper_z_total:
+  LeftArm-2.z  = -total * 0.126 / 0.334
+  LeftArm-3.z  = -total * 0.208 / 0.334
+  RightArm-2.z = -total * 0.126 / 0.334
+  RightArm-3.z = -total * 0.208 / 0.334
+
+arm_forearm_z_total:
+  LeftArm-4.z  = -total * 0.130 / 0.334
+  LeftArm-5.z  = -total * 0.204 / 0.334
+  RightArm-4.z = -total * 0.130 / 0.334
+  RightArm-5.z = -total * 0.204 / 0.334
+
+arm_shoulder_x_total:
+  LeftArm-0.x  = +total * 0.141 / 0.220
+  LeftArm-1.x  = +total * 0.079 / 0.220
+  RightArm-0.x = -total * 0.141 / 0.220
+  RightArm-1.x = +total * 0.079 / 0.220
+
+waist_top_z_total:
+  waist02_fixed.z = total * 0.084 / 0.333
+  waist03_fixed.z = total * 0.249 / 0.333
+```
+
+### 11.3 参数影响分类
+
+必须把参数分为两类处理，不能一律后端重算。
+
+**A 类：改变 arm hull 形状，必须后端重新采样和求 convex hull**
+
+```text
+arm_upper_z_total
+arm_elbow_y_offset
+arm_forearm_z_total
+arm_wrist_z
+```
+
+这些参数改变 `waist03 -> arm joints -> ee_site` 链内部几何，末端点云和 hull 面拓扑都可能变化。点击确认后应启动后端 job，生成新的点云预览和 hull。
+
+**B 类：不改变 arm hull 形状，只改变刚体摆放或 base_link 下的位置**
+
+```text
+arm_shoulder_x_total
+legwaist2_z
+legwaist3_z
+waist_top_z_total
+```
+
+这些参数不需要重新计算 arm hull：
+
+- `legwaist2_z`、`legwaist3_z`、`waist_top_z_total` 只改变 `base_link -> waist03`，处理方式与 `LegWaist-1..3` 当前角度滑块一致。
+- `arm_shoulder_x_total` 只改变左右手臂工作空间相对 `waist03` 的横向平移，不改变每侧 hull 形状。因为 `LeftArm-0` 绕 X 轴旋转，`LeftArm-1` 的偏移也沿 X 轴：
+
+```text
+Trans(0.141 X) * RotX(q0) * Trans(0.079 X)
+= Trans((0.141 + 0.079) X) * RotX(q0)
+```
+
+因此可在前端或 FK 层直接处理 shoulder delta：
+
+```text
+delta = new_arm_shoulder_x_total - 0.220
+left hull in waist03:  p' = p + [ delta, 0, 0]
+right hull in waist03: p' = p + [-delta, 0, 0]
+```
+
+随后再统一应用当前 `T_base_waist03`。
+
+### 11.4 交互与计算流程
+
+参数编辑应区分 `staged parameters` 和 `active parameters`：
+
+```text
+staged parameters:
+  用户正在编辑的值，只更新表单状态和 dirty 标记。
+
+active parameters:
+  用户点击 Apply / Recompute 后生效的值，用于 FK、skeleton、hull 和缓存 key。
+```
+
+点击确认后的流程：
+
+```text
+1. 校验 8 个参数的范围和数值合法性。
+2. 比较 staged parameters 与 active parameters。
+3. 若只修改 B 类参数：
+   - 不启动后端 hull job。
+   - 更新 skeleton FK。
+   - 更新 base_link -> waist03。
+   - 对已有 left/right hull 做刚体变换或 shoulder 平移。
+4. 若任意 A 类参数被修改：
+   - 更新 skeleton FK。
+   - 标记当前 hull 为 stale，可保留旧 hull ghost 做对比。
+   - 启动后端异步重算。
+   - 先加载低采样点云/粗 hull preview。
+   - 再替换为更高采样 final hull。
+```
+
+推荐采样层级：
+
+| 层级 | 每臂样本数 | 用途 |
+|---|---:|---|
+| preview | `2^12 .. 2^14` | 快速反馈，优先显示点云和粗 hull |
+| medium | `2^16` | 交互检查和截图 |
+| final | `2^18` 或更高 | 正式可视化结果 |
+
+如果用户在后端 job 运行中继续修改 A 类参数并再次确认，应取消或废弃旧 job 的结果，避免旧参数结果覆盖新参数结果。
+
+### 11.5 缓存和产物组织
+
+hull cache key 只应包含真正改变 arm hull 形状的 A 类参数，不应包含 `arm_shoulder_x_total`、`legwaist2_z`、`legwaist3_z`、`waist_top_z_total`。这样用户只调整腰腿尺寸或 shoulder 横向安装距离时，可以复用现有 hull。
+
+建议目录：
+
+```text
+interactive_workspace_viewer/data/parametric/
+  variants/
+    <arm_shape_param_hash>/
+      config.json
+      left_points_preview_2p14.npz
+      right_points_preview_2p14.npz
+      left_hull_2p14.json
+      right_hull_2p14.json
+      left_hull_2p18.json
+      right_hull_2p18.json
+```
+
+`config.json` 应记录：
+
+- 8 个 active 参数。
+- A 类参数 hash。
+- URDF 源文件路径和生成时间。
+- 采样数、随机种子、Sobol 配置。
+- 是否包含 preview / medium / final 结果。
+- hull 坐标系仍为 `waist03`。
+
+### 11.6 验收标准
+
+- UI 显示 8 个参数，单位清晰，点击确认前不触发后端重算。
+- 左右臂参数同步修改，并保持镜像符号正确。
+- 只修改 `arm_shoulder_x_total`、`legwaist2_z`、`legwaist3_z`、`waist_top_z_total` 时，不启动 hull 重算。
+- 修改 A 类参数时，旧 hull 标记为 stale，并异步加载 preview / final 新结果。
+- 新旧 hull 可对比，且图上明确标注 sample count 和 approximate。
+- `waist03`、左右末端零位和 shoulder delta 的数值变化可通过 FK 校验复现。
+
+## 12. 后续值得完善的功能
 
 第一版完成后，建议按以下顺序增强。
 
-### 11.1 voxel / 点云真实可达层
+### 12.1 voxel / 点云真实可达层
 
 在 hull 外再叠加：
 
@@ -571,7 +745,7 @@ Hull interior may include unreachable points
 
 用于减少凸包对内部不可达区域的误导。
 
-### 11.2 剖切平面
+### 12.2 剖切平面
 
 添加 `X/Y/Z` 剖切：
 
@@ -579,7 +753,7 @@ Hull interior may include unreachable points
 - 查看机器人与包络的相对位置。
 - 后续可用于观察 voxel 切片。
 
-### 11.3 测量工具
+### 12.3 测量工具
 
 支持：
 
@@ -588,7 +762,7 @@ Hull interior may include unreachable points
 - 当前末端位置到 hull bbox 边界距离。
 - `waist03` 高度和水平位移读数。
 
-### 11.4 mesh overlay
+### 12.4 mesh overlay
 
 后续加载 URDF mesh：
 
@@ -597,7 +771,7 @@ Hull interior may include unreachable points
 - mesh 透明度可调。
 - 如果 mesh 坐标与 skeleton 有偏差，应优先信任 skeleton/FK 并记录问题。
 
-### 11.5 姿态覆盖率和 manipulability
+### 12.5 姿态覆盖率和 manipulability
 
 后续叠加：
 
@@ -609,9 +783,9 @@ Hull interior may include unreachable points
 
 这些内容不应替代第一版 hull，而应作为额外 layer。
 
-## 12. 验证计划
+## 13. 验证计划
 
-### 12.1 FK 数值验证
+### 13.1 FK 数值验证
 
 前端或导出数据必须能复现以下参考值：
 
@@ -629,7 +803,7 @@ right ee zero = [-0.2120, 0.0864, 0.5415]
 
 如果前端 FK 与 Python FK 差异超过 `1e-5 m` 或明显姿态不一致，应先修复 FK，而不是继续调视觉。
 
-### 12.2 hull 变换验证
+### 13.2 hull 变换验证
 
 验证内容：
 
@@ -638,7 +812,7 @@ right ee zero = [-0.2120, 0.0864, 0.5415]
 - 左右 hull 的相对镜像关系应符合 URDF 左右臂定义。
 - hull bbox 随腰腿姿态变化应连续，无跳变。
 
-### 12.3 交互验证
+### 13.3 交互验证
 
 至少检查：
 
@@ -649,7 +823,7 @@ right ee zero = [-0.2120, 0.0864, 0.5415]
 - 移动端或小窗口下控制面板文字是否溢出。
 - 滑块快速拖动时是否掉帧明显。
 
-### 12.4 截图记录
+### 13.4 截图记录
 
 每个阶段应保存截图到：
 
@@ -666,7 +840,7 @@ interactive_workspace_viewer/results/screenshots/
 - both hulls with key frames。
 - top/front/side camera preset。
 
-## 13. 分阶段实施计划
+## 14. 分阶段实施计划
 
 ### Phase 1：静态数据与 3D 骨架
 
@@ -715,6 +889,23 @@ interactive_workspace_viewer/results/screenshots/
 - 可以只看腰腿、只看某侧 hull、只看关键 frame。
 - 点击 frame 能看到位置和姿态。
 
+### Phase 3.5：参数化几何 what-if
+
+目标：
+
+- 支持 8 个关键几何参数的 staged 编辑和确认应用。
+- 区分需要重算 hull 的 A 类 arm shape 参数，以及只需 FK/刚体变换的 B 类参数。
+- 对 A 类参数提供后端异步重算、低采样 preview 和 final hull 替换。
+- 对 B 类参数复用已有 hull，实时更新 skeleton、`T_base_waist03` 和 shoulder 横向偏移。
+
+验收：
+
+- 点击确认前不触发重算。
+- 只修改 B 类参数时不启动后端 hull job。
+- 修改 A 类参数时旧 hull 标记为 stale，新 hull 按 preview / final 逐步加载。
+- 左右臂同步修改且镜像正确。
+- 结果明确标注参数、采样数和 approximate 状态。
+
 ### Phase 4：后续扩展
 
 目标：
@@ -730,7 +921,7 @@ interactive_workspace_viewer/results/screenshots/
 - 凸包、点云、体素和指标层可以独立开关。
 - 图上明确区分“包络近似”和“真实采样/体素可达”。
 
-## 14. 当前建议的第一步实现
+## 15. 当前建议的第一步实现
 
 建议下一步先实现最小可用版本：
 

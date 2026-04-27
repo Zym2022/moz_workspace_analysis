@@ -23,6 +23,10 @@ spirit_moz1/meshes/
 
 # Node
 node_modules/
+dist/
+
+# Parametric hull cache (generated data)
+interactive_workspace_viewer/data/parametric/
 
 # OS
 .DS_Store

@@ -96,3 +96,16 @@ export interface JointLimitsData {
   generated_at: string;
   joints: Record<string, JointLimitEntry>;
 }
+
+// Phase 3.5: Parametric geometry types
+
+export interface ParametricParams {
+  arm_upper_z_total: number;
+  arm_elbow_y_offset: number;
+  arm_forearm_z_total: number;
+  arm_wrist_z: number;
+  arm_shoulder_x_total: number;
+  legwaist2_z: number;
+  legwaist3_z: number;
+  waist_top_z_total: number;
+}

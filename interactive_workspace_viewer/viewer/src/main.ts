@@ -13,7 +13,9 @@ import { loadSkeleton } from './loaders/SkeletonLoader.ts';
 import { loadHull } from './loaders/HullLoader.ts';
 import { loadJointLimits } from './loaders/JointLimitsLoader.ts';
 import { ForwardKinematics } from './kinematics/ForwardKinematics.ts';
-import type { JointState } from './kinematics/types.ts';
+import { ParametricSkeleton, DEFAULT_PARAMS } from './kinematics/ParametricSkeleton.ts';
+import { ParametricPanel } from './ui/ParametricPanel.ts';
+import type { JointState, ParametricParams, SkeletonData } from './kinematics/types.ts';
 
 async function main() {
   const container = document.getElementById('app');
@@ -46,8 +48,13 @@ async function main() {
     return;
   }
 
-  // 5. FK engine
-  const fk = new ForwardKinematics(skeleton);
+  // 5. FK engine + parametric skeleton
+  const baseSkeleton = skeleton;
+  const paramSkeleton = new ParametricSkeleton(baseSkeleton);
+  let activeParams: ParametricParams = { ...DEFAULT_PARAMS };
+  paramSkeleton.verifyDefaults();
+
+  let fk = new ForwardKinematics(skeleton);
 
   // 6. Joint state (Phase 2: waist only)
   let jointState: JointState = {
@@ -57,10 +64,10 @@ async function main() {
   };
 
   // 7. Scene objects
-  const robot = new RobotSkeleton(skeleton);
+  let robot = new RobotSkeleton(skeleton);
   sceneManager.scene.add(robot.group);
 
-  const axes = new FrameAxes(skeleton);
+  let axes = new FrameAxes(skeleton);
   sceneManager.scene.add(axes.group);
 
   let leftMesh: HullMesh | null = null;
@@ -148,6 +155,153 @@ async function main() {
   const cameraPresets = new CameraPresets(sceneManager.camera, sceneManager.controls);
   sceneManager.onBeforeRender = () => {
     cameraPresets.update();
+  };
+
+  // Store default hull data for reset
+  const defaultLeftHull = leftHull;
+  const defaultRightHull = rightHull;
+
+  // Helper: rebuild skeleton/FK/axes from a SkeletonData
+  function applySkeleton(sk: SkeletonData) {
+    fk = new ForwardKinematics(sk);
+    sceneManager.scene.remove(robot.group);
+    robot = new RobotSkeleton(sk);
+    sceneManager.scene.add(robot.group);
+    sceneManager.scene.remove(axes.group);
+    axes = new FrameAxes(sk);
+    sceneManager.scene.add(axes.group);
+  }
+
+  // 11b. Parametric geometry panel
+  const parametricPanel = new ParametricPanel(DEFAULT_PARAMS);
+  let currentRequestId = 0;
+
+  parametricPanel.onApply = async (params: ParametricParams) => {
+    const armChanged = paramSkeleton.hasArmShapeChanged(params, activeParams);
+    const requestId = ++currentRequestId;
+
+    if (!armChanged) {
+      // B-class only: apply immediately, no recompute
+      const newSkeleton = paramSkeleton.apply(params);
+      applySkeleton(newSkeleton);
+      const delta = paramSkeleton.getShoulderDelta(params);
+      leftMesh?.setShoulderDelta(delta);
+      rightMesh?.setShoulderDelta(-delta);
+      activeParams = { ...params };
+      parametricPanel.setStatus('Applied');
+      updateAll();
+      return;
+    }
+
+    // A-class changed: mark stale but keep current skeleton until preview succeeds
+    leftMesh?.setStale(true);
+    rightMesh?.setStale(true);
+    parametricPanel.setHullStatus('Recomputing preview...');
+
+    const aClassBody = {
+      arm_upper_z_total: params.arm_upper_z_total,
+      arm_elbow_y_offset: params.arm_elbow_y_offset,
+      arm_forearm_z_total: params.arm_forearm_z_total,
+      arm_wrist_z: params.arm_wrist_z,
+    };
+
+    try {
+      const previewResp = await fetch('/api/recompute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...aClassBody, sobol_m: 12 }),
+      });
+      if (requestId !== currentRequestId) return;
+
+      if (!previewResp.ok) {
+        parametricPanel.setHullStatus('Recompute failed — is hull_server running?');
+        leftMesh?.setStale(false);
+        rightMesh?.setStale(false);
+        return;
+      }
+
+      const previewResult = await previewResp.json();
+      const [previewLeft, previewRight] = await Promise.all([
+        fetch(previewResult.left_hull_url).then((r: Response) => r.json()),
+        fetch(previewResult.right_hull_url).then((r: Response) => r.json()),
+      ]);
+      if (requestId !== currentRequestId) return;
+
+      // Preview succeeded: now commit skeleton + hull + params atomically
+      const newSkeleton = paramSkeleton.apply(params);
+      applySkeleton(newSkeleton);
+      const delta = paramSkeleton.getShoulderDelta(params);
+      leftMesh?.setShoulderDelta(delta);
+      rightMesh?.setShoulderDelta(-delta);
+      leftMesh?.replaceHull(previewLeft);
+      rightMesh?.replaceHull(previewRight);
+      leftMesh?.setStale(false);
+      rightMesh?.setStale(false);
+      activeParams = { ...params };
+      parametricPanel.setStatus('Applied');
+      updateAll();
+
+      if (previewResult.sobol_m >= 18) {
+        parametricPanel.setHullStatus(`Final (2^${previewResult.sobol_m})`);
+      } else {
+        parametricPanel.setHullStatus(`Preview (2^${previewResult.sobol_m}) — computing final...`);
+
+        fetch('/api/recompute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...aClassBody, sobol_m: 18 }),
+        }).then(async (finalResp) => {
+          if (requestId !== currentRequestId) return;
+          if (!finalResp.ok) return;
+          const finalResult = await finalResp.json();
+          const [finalLeft, finalRight] = await Promise.all([
+            fetch(finalResult.left_hull_url).then((r: Response) => r.json()),
+            fetch(finalResult.right_hull_url).then((r: Response) => r.json()),
+          ]);
+          if (requestId !== currentRequestId) return;
+          leftMesh?.replaceHull(finalLeft);
+          rightMesh?.replaceHull(finalRight);
+          parametricPanel.setHullStatus(`Final (2^${finalResult.sobol_m})`);
+          updateAll();
+        }).catch(() => {
+          if (requestId === currentRequestId) {
+            parametricPanel.setHullStatus(`Preview only — final computation failed`);
+          }
+        });
+      }
+    } catch {
+      if (requestId !== currentRequestId) return;
+      parametricPanel.setHullStatus('Server unreachable — hull unchanged');
+      leftMesh?.setStale(false);
+      rightMesh?.setStale(false);
+    }
+  };
+
+  parametricPanel.onReset = () => {
+    currentRequestId++;
+    fk = new ForwardKinematics(baseSkeleton);
+
+    sceneManager.scene.remove(robot.group);
+    robot = new RobotSkeleton(baseSkeleton);
+    sceneManager.scene.add(robot.group);
+
+    sceneManager.scene.remove(axes.group);
+    axes = new FrameAxes(baseSkeleton);
+    sceneManager.scene.add(axes.group);
+
+    leftMesh?.setShoulderDelta(0);
+    rightMesh?.setShoulderDelta(0);
+    leftMesh?.setStale(false);
+    rightMesh?.setStale(false);
+
+    // Restore default hull meshes
+    if (defaultLeftHull) leftMesh?.replaceHull(defaultLeftHull);
+    if (defaultRightHull) rightMesh?.replaceHull(defaultRightHull);
+
+    activeParams = { ...DEFAULT_PARAMS };
+    parametricPanel.setStatus('Default params');
+    parametricPanel.setHullStatus('Current (2^18)');
+    updateAll();
   };
 
   // 12. Initial update + FK verification
