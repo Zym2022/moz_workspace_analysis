@@ -21,6 +21,9 @@ spirit_moz1/meshes/
 *.STL
 *.stl
 
+# Node
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,0 +1,1272 @@
+{
+  "schema": "moz2_skeleton_v1",
+  "source_urdf": "moz2_simplified.urdf",
+  "generated_at": "2026-04-27T06:17:26.460939+00:00",
+  "root": "base_link",
+  "joints": [
+    {
+      "name": "leg01_fixed",
+      "type": "fixed",
+      "parent": "base_link",
+      "child": "leg01",
+      "origin_xyz": [
+        0.0,
+        0.1114,
+        0.1875
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    },
+    {
+      "name": "LegWaist-1",
+      "type": "revolute",
+      "parent": "leg01",
+      "child": "leg02",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.122
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
+    },
+    {
+      "name": "LegWaist-2",
+      "type": "revolute",
+      "parent": "leg02",
+      "child": "leg03",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.3585
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -2.530727415,
+      "limit_upper": 0.017453293
+    },
+    {
+      "name": "LegWaist-3",
+      "type": "revolute",
+      "parent": "leg03",
+      "child": "waist01",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.3585
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -0.174532925,
+      "limit_upper": 1.396263402
+    },
+    {
+      "name": "waist02_fixed",
+      "type": "fixed",
+      "parent": "waist01",
+      "child": "waist02",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.084
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    },
+    {
+      "name": "waist03_fixed",
+      "type": "fixed",
+      "parent": "waist02",
+      "child": "waist03",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.249
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    },
+    {
+      "name": "LeftArm-0",
+      "type": "revolute",
+      "parent": "waist03",
+      "child": "left01",
+      "origin_xyz": [
+        0.141,
+        0.0,
+        0.0
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -3.141592654,
+      "limit_upper": 2.094395102
+    },
+    {
+      "name": "LeftArm-1",
+      "type": "revolute",
+      "parent": "left01",
+      "child": "left02",
+      "origin_xyz": [
+        0.079,
+        0.0,
+        0.0
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "limit_lower": -2.967059728,
+      "limit_upper": 0.157079633
+    },
+    {
+      "name": "LeftArm-2",
+      "type": "revolute",
+      "parent": "left02",
+      "child": "left03",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.126
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "limit_lower": -3.054326191,
+      "limit_upper": 3.054326191
+    },
+    {
+      "name": "LeftArm-3",
+      "type": "revolute",
+      "parent": "left03",
+      "child": "left04",
+      "origin_xyz": [
+        0.0,
+        -0.025,
+        -0.208
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -2.7911111,
+      "limit_upper": 0.174532925
+    },
+    {
+      "name": "LeftArm-4",
+      "type": "revolute",
+      "parent": "left04",
+      "child": "left05",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.13
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "limit_lower": -3.054326191,
+      "limit_upper": 3.054326191
+    },
+    {
+      "name": "LeftArm-5",
+      "type": "revolute",
+      "parent": "left05",
+      "child": "left06",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.204
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "limit_lower": -1.658062789,
+      "limit_upper": 1.658062789
+    },
+    {
+      "name": "LeftArm-6",
+      "type": "revolute",
+      "parent": "left06",
+      "child": "left07",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.05
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
+    },
+    {
+      "name": "left_ee_site_fixed",
+      "type": "fixed",
+      "parent": "left07",
+      "child": "left_ee_site",
+      "origin_xyz": [
+        -0.008,
+        0.0,
+        -0.1
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    },
+    {
+      "name": "RightArm-0",
+      "type": "revolute",
+      "parent": "waist03",
+      "child": "right01",
+      "origin_xyz": [
+        -0.141,
+        0.0,
+        0.0
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        3.14159265359
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -2.094395102,
+      "limit_upper": 3.141592654
+    },
+    {
+      "name": "RightArm-1",
+      "type": "revolute",
+      "parent": "right01",
+      "child": "right02",
+      "origin_xyz": [
+        0.079,
+        0.0,
+        0.0
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "limit_lower": -2.967059728,
+      "limit_upper": 0.157079633
+    },
+    {
+      "name": "RightArm-2",
+      "type": "revolute",
+      "parent": "right02",
+      "child": "right03",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.126
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "limit_lower": -3.054326191,
+      "limit_upper": 3.054326191
+    },
+    {
+      "name": "RightArm-3",
+      "type": "revolute",
+      "parent": "right03",
+      "child": "right04",
+      "origin_xyz": [
+        0.0,
+        0.025,
+        -0.208
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -0.174532925,
+      "limit_upper": 2.7911111
+    },
+    {
+      "name": "RightArm-4",
+      "type": "revolute",
+      "parent": "right04",
+      "child": "right05",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.13
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "limit_lower": -3.054326191,
+      "limit_upper": 3.054326191
+    },
+    {
+      "name": "RightArm-5",
+      "type": "revolute",
+      "parent": "right05",
+      "child": "right06",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.204
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "limit_lower": -1.658062789,
+      "limit_upper": 1.658062789
+    },
+    {
+      "name": "RightArm-6",
+      "type": "revolute",
+      "parent": "right06",
+      "child": "right07",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        -0.05
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
+    },
+    {
+      "name": "right_ee_site_fixed",
+      "type": "fixed",
+      "parent": "right07",
+      "child": "right_ee_site",
+      "origin_xyz": [
+        -0.008,
+        0.0,
+        -0.1
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    },
+    {
+      "name": "Head-0",
+      "type": "revolute",
+      "parent": "waist03",
+      "child": "head21",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.096
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
+    },
+    {
+      "name": "Head-1",
+      "type": "revolute",
+      "parent": "head21",
+      "child": "head22",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.103
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
+    },
+    {
+      "name": "Head-2",
+      "type": "fixed",
+      "parent": "head22",
+      "child": "head23",
+      "origin_xyz": [
+        0.0,
+        0.0,
+        0.04
+      ],
+      "origin_rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "limit_lower": null,
+      "limit_upper": null
+    }
+  ],
+  "links": [
+    "base_link",
+    "leg01",
+    "leg02",
+    "leg03",
+    "waist01",
+    "waist02",
+    "waist03",
+    "left01",
+    "left02",
+    "left03",
+    "left04",
+    "left05",
+    "left06",
+    "left07",
+    "left_ee_site",
+    "right01",
+    "right02",
+    "right03",
+    "right04",
+    "right05",
+    "right06",
+    "right07",
+    "right_ee_site",
+    "head21",
+    "head22",
+    "head23"
+  ],
+  "key_frames": [
+    "base_link",
+    "leg01",
+    "leg02",
+    "leg03",
+    "waist01",
+    "waist02",
+    "waist03",
+    "left01",
+    "left04",
+    "left06",
+    "left07",
+    "left_ee_site",
+    "right01",
+    "right04",
+    "right06",
+    "right07",
+    "right_ee_site"
+  ],
+  "zero_pose_world_transforms": {
+    "base_link": {
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "leg01": {
+      "position": [
+        0.0,
+        0.1114,
+        0.1875
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "leg02": {
+      "position": [
+        0.0,
+        0.1114,
+        0.3095
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "leg03": {
+      "position": [
+        0.0,
+        0.1114,
+        0.668
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "waist01": {
+      "position": [
+        0.0,
+        0.1114,
+        1.0265
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "waist02": {
+      "position": [
+        0.0,
+        0.1114,
+        1.1105
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "waist03": {
+      "position": [
+        0.0,
+        0.1114,
+        1.3595
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left01": {
+      "position": [
+        0.141,
+        0.1114,
+        1.3595
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right01": {
+      "position": [
+        -0.141,
+        0.1114,
+        1.3595
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "head21": {
+      "position": [
+        0.0,
+        0.1114,
+        1.4555
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left02": {
+      "position": [
+        0.22,
+        0.1114,
+        1.3595
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right02": {
+      "position": [
+        -0.22,
+        0.1114,
+        1.3595
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "head22": {
+      "position": [
+        0.0,
+        0.1114,
+        1.5585
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left03": {
+      "position": [
+        0.22,
+        0.1114,
+        1.2335
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right03": {
+      "position": [
+        -0.22,
+        0.1114,
+        1.2335
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "head23": {
+      "position": [
+        0.0,
+        0.1114,
+        1.5985
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left04": {
+      "position": [
+        0.22,
+        0.0864,
+        1.0255
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right04": {
+      "position": [
+        -0.22,
+        0.0864,
+        1.0255
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left05": {
+      "position": [
+        0.22,
+        0.0864,
+        0.8955
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right05": {
+      "position": [
+        -0.22,
+        0.0864,
+        0.8955
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left06": {
+      "position": [
+        0.22,
+        0.0864,
+        0.6915
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right06": {
+      "position": [
+        -0.22,
+        0.0864,
+        0.6915
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left07": {
+      "position": [
+        0.22,
+        0.0864,
+        0.6415
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right07": {
+      "position": [
+        -0.22,
+        0.0864,
+        0.6415
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "left_ee_site": {
+      "position": [
+        0.212,
+        0.0864,
+        0.5415
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right_ee_site": {
+      "position": [
+        -0.212,
+        0.0864,
+        0.5415
+      ],
+      "rotation_matrix": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    }
+  },
+  "chains": {
+    "waist": {
+      "fixed_pre": [
+        "leg01_fixed"
+      ],
+      "revolute": [
+        "LegWaist-1",
+        "LegWaist-2",
+        "LegWaist-3"
+      ],
+      "fixed_post": [
+        "waist02_fixed",
+        "waist03_fixed"
+      ]
+    },
+    "left_arm": {
+      "revolute": [
+        "LeftArm-0",
+        "LeftArm-1",
+        "LeftArm-2",
+        "LeftArm-3",
+        "LeftArm-4",
+        "LeftArm-5",
+        "LeftArm-6"
+      ],
+      "ee_fixed": "left_ee_site_fixed"
+    },
+    "right_arm": {
+      "revolute": [
+        "RightArm-0",
+        "RightArm-1",
+        "RightArm-2",
+        "RightArm-3",
+        "RightArm-4",
+        "RightArm-5",
+        "RightArm-6"
+      ],
+      "ee_fixed": "right_ee_site_fixed"
+    }
+  }
+}
