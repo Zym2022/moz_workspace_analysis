@@ -22,7 +22,7 @@ export class HullMesh {
 
     const color = this.baseColor;
 
-    // Hull vertices remain in waist03 local frame.
+    // Hull vertices remain in waist01 local frame.
     const verts: number[] = [];
     for (const v of hull.vertices) {
       verts.push(v[0], v[1], v[2]);
@@ -61,9 +61,14 @@ export class HullMesh {
     this.offsetGroup.add(this.wireMesh);
   }
 
-  update(waist03Transform: FrameTransform) {
-    this.group.position.set(...waist03Transform.position);
-    this.group.quaternion.copy(waist03Transform.quaternion);
+  update(waist01Transform: FrameTransform) {
+    this.group.position.set(...waist01Transform.position);
+    this.group.quaternion.copy(waist01Transform.quaternion);
+  }
+
+  setVisible(visible: boolean): void {
+    if (this.surfaceMesh) this.surfaceMesh.visible = visible;
+    if (this.wireMesh) this.wireMesh.visible = visible;
   }
 
   replaceHull(newHull: HullData): void {
@@ -126,5 +131,50 @@ export class HullMesh {
     (this.surfaceMesh.material as THREE.MeshPhongMaterial).opacity = opacity;
     (this.wireMesh.material as THREE.MeshBasicMaterial).color.setHex(color);
     (this.wireMesh.material as THREE.MeshBasicMaterial).opacity = stale ? 0.15 : 0.3;
+  }
+
+  getWorldVertices(): Float32Array {
+    if (!this.surfaceMesh) return new Float32Array(0);
+
+    this.group.updateMatrixWorld(true);
+    const position = this.surfaceMesh.geometry.getAttribute('position');
+    if (!(position instanceof THREE.BufferAttribute)) return new Float32Array(0);
+
+    const matrixWorld = this.surfaceMesh.matrixWorld;
+    const result = new Float32Array(position.count * 3);
+    const vertex = new THREE.Vector3();
+
+    for (let i = 0; i < position.count; i += 1) {
+      vertex.fromBufferAttribute(position, i).applyMatrix4(matrixWorld);
+      result[i * 3] = vertex.x;
+      result[i * 3 + 1] = vertex.y;
+      result[i * 3 + 2] = vertex.z;
+    }
+
+    return result;
+  }
+
+  getWorldAabb(target: THREE.Box3 = new THREE.Box3()): THREE.Box3 {
+    if (!this.surfaceMesh) {
+      return target.makeEmpty();
+    }
+
+    this.group.updateMatrixWorld(true);
+
+    const position = this.surfaceMesh.geometry.getAttribute('position');
+    if (!(position instanceof THREE.BufferAttribute)) {
+      return target.makeEmpty();
+    }
+
+    const matrixWorld = this.surfaceMesh.matrixWorld;
+    const vertex = new THREE.Vector3();
+    target.makeEmpty();
+
+    for (let i = 0; i < position.count; i += 1) {
+      vertex.fromBufferAttribute(position, i).applyMatrix4(matrixWorld);
+      target.expandByPoint(vertex);
+    }
+
+    return target;
   }
 }

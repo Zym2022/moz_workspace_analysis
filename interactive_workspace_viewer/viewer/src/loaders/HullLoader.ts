@@ -1,8 +1,8 @@
 import type { HullData } from '../kinematics/types.ts';
 
 const HULL_URLS: Record<string, string> = {
-  left: '/hulls/left_arm_hull_waist03.json',
-  right: '/hulls/right_arm_hull_waist03.json',
+  left: '/hulls/left_arm_hull_waist01.json',
+  right: '/hulls/right_arm_hull_waist01.json',
 };
 
 export async function loadHull(arm: 'left' | 'right'): Promise<HullData | null> {

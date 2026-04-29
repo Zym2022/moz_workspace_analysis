@@ -26,8 +26,8 @@ WAIST_ANALYSIS_RANGES = {
 }
 
 KEY_FRAMES = [
-    "base_link", "leg01", "leg02", "leg03",
-    "waist01", "waist02", "waist03",
+    "base_link", "leg02", "leg03",
+    "waist01",
     "left01", "left04", "left06", "left07", "left_ee_site",
     "right01", "right04", "right06", "right07", "right_ee_site",
 ]
@@ -178,9 +178,7 @@ def main():
         "zero_pose_world_transforms": zero_pose,
         "chains": {
             "waist": {
-                "fixed_pre": ["leg01_fixed"],
                 "revolute": ["LegWaist-1", "LegWaist-2", "LegWaist-3"],
-                "fixed_post": ["waist02_fixed", "waist03_fixed"],
             },
             "left_arm": {
                 "revolute": [f"LeftArm-{i}" for i in range(7)],
@@ -199,10 +197,10 @@ def main():
     print(f"Wrote {skel_path}")
 
     # Verify key positions
-    w03 = zero_pose["waist03"]["position"]
+    w01 = zero_pose["waist01"]["position"]
     lee = zero_pose["left_ee_site"]["position"]
     ree = zero_pose["right_ee_site"]["position"]
-    print(f"  waist03 zero pose: {w03}")
+    print(f"  waist01 zero pose: {w01}")
     print(f"  left EE zero pose: {lee}")
     print(f"  right EE zero pose: {ree}")
 

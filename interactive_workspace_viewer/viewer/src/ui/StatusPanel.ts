@@ -34,14 +34,14 @@ export class StatusPanel {
       lines.push(`${name}: ${deg}°`);
     }
 
-    // waist03 position
-    const w03 = fk.linkTransforms['waist03'];
-    if (w03) {
-      const p = w03.position;
-      lines.push(`waist03 pos: [${p[0].toFixed(4)}, ${p[1].toFixed(4)}, ${p[2].toFixed(4)}]`);
+    // waist01 position
+    const w01 = fk.linkTransforms['waist01'];
+    if (w01) {
+      const p = w01.position;
+      lines.push(`waist01 pos: [${p[0].toFixed(4)}, ${p[1].toFixed(4)}, ${p[2].toFixed(4)}]`);
 
       // RPY from rotation matrix
-      const R = w03.rotationMatrix;
+      const R = w01.rotationMatrix;
       const sy = Math.hypot(R[0][0], R[1][0]);
       let roll: number, pitch: number, yaw: number;
       if (sy > 1e-6) {
@@ -54,7 +54,7 @@ export class StatusPanel {
         yaw = 0;
       }
       lines.push(
-        `waist03 rpy: [${(roll * RAD2DEG).toFixed(2)}°, ${(pitch * RAD2DEG).toFixed(2)}°, ${(yaw * RAD2DEG).toFixed(2)}°]`,
+        `waist01 rpy: [${(roll * RAD2DEG).toFixed(2)}°, ${(pitch * RAD2DEG).toFixed(2)}°, ${(yaw * RAD2DEG).toFixed(2)}°]`,
       );
     }
 

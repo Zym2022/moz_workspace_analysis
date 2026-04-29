@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Export convex hull data for left and right arms relative to waist03 frame.
+Export convex hull data for left and right arms relative to waist01 frame.
 
 Uses Sobol quasi-random sampling + FK from existing URDFKinematics.
 
 Outputs:
-  data/hulls/left_arm_hull_waist03.json   (schema: moz2_arm_hull_v1)
-  data/hulls/right_arm_hull_waist03.json  (schema: moz2_arm_hull_v1)
+  data/hulls/left_arm_hull_waist01.json   (schema: moz2_arm_hull_v1)
+  data/hulls/right_arm_hull_waist01.json  (schema: moz2_arm_hull_v1)
 """
 
 import argparse
@@ -66,9 +66,9 @@ def generate_hull(arm_side: str, sobol_m: int, seed: int = 42, scramble: bool = 
     elapsed = time.time() - t0
     print(f"  FK done in {elapsed:.1f}s")
 
-    # EE zero pose in waist03
+    # EE zero pose in waist01
     ee_zero, _ = kin.forward_kinematics(np.zeros(n_joints))
-    print(f"  EE zero pose in waist03: {ee_zero}")
+    print(f"  EE zero pose in waist01: {ee_zero}")
 
     # Convex hull
     print(f"  Computing convex hull...")
@@ -95,7 +95,7 @@ def generate_hull(arm_side: str, sobol_m: int, seed: int = 42, scramble: bool = 
     hull_data = {
         "schema": "moz2_arm_hull_v1",
         "arm": arm_side,
-        "frame": "waist03",
+        "frame": "waist01",
         "source_urdf": "moz2_simplified.urdf",
         "n_samples": n_samples,
         "sobol_m": sobol_m,
@@ -109,16 +109,16 @@ def generate_hull(arm_side: str, sobol_m: int, seed: int = 42, scramble: bool = 
         "faces": [list(int(x) for x in f) for f in compact_faces],
         "bbox_min": [round(float(x), 4) for x in bbox_min],
         "bbox_max": [round(float(x), 4) for x in bbox_max],
-        "ee_zero_pose_in_waist03": [round(float(x), 6) for x in ee_zero],
+        "ee_zero_pose_in_waist01": [round(float(x), 6) for x in ee_zero],
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "notes": [
-            "Convex hull of sampled EE positions in waist03 frame.",
+            "Convex hull of sampled EE positions in waist01 frame.",
             "Interior may include unreachable points.",
             "faces index into compact vertices array (remapped from ConvexHull.simplices).",
         ],
     }
 
-    out_path = VIEWER_ROOT / "data" / "hulls" / f"{arm_side}_arm_hull_waist03.json"
+    out_path = VIEWER_ROOT / "data" / "hulls" / f"{arm_side}_arm_hull_waist01.json"
     with open(out_path, "w") as f:
         json.dump(hull_data, f, indent=2)
     print(f"  Wrote {out_path}")

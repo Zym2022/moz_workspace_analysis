@@ -1,14 +1,18 @@
+import * as THREE from 'three';
 import { SceneManager } from './scene/SceneManager.ts';
 import { RobotSkeleton } from './scene/RobotSkeleton.ts';
 import { HullMesh } from './scene/HullMesh.ts';
 import { FrameAxes } from './scene/FrameAxes.ts';
 import { ZUpGrid } from './scene/GridHelper.ts';
 import { TaskPointMarker } from './scene/TaskPointMarker.ts';
+import { HullProjectionDimensions } from './scene/HullProjectionDimensions.ts';
+import { ProjectionGrid } from './scene/ProjectionGrid.ts';
 import { InfoOverlay } from './ui/InfoOverlay.ts';
 import { ControlPanel } from './ui/ControlPanel.ts';
 import { StatusPanel } from './ui/StatusPanel.ts';
 import { CameraPresets } from './ui/CameraPresets.ts';
 import { TaskPointPanel } from './ui/TaskPointPanel.ts';
+import { ProjectionDimensionPanel } from './ui/ProjectionDimensionPanel.ts';
 import { loadSkeleton } from './loaders/SkeletonLoader.ts';
 import { loadHull } from './loaders/HullLoader.ts';
 import { loadJointLimits } from './loaders/JointLimitsLoader.ts';
@@ -16,6 +20,9 @@ import { ForwardKinematics } from './kinematics/ForwardKinematics.ts';
 import { ParametricSkeleton, DEFAULT_PARAMS } from './kinematics/ParametricSkeleton.ts';
 import { ParametricPanel } from './ui/ParametricPanel.ts';
 import type { JointState, ParametricParams, SkeletonData } from './kinematics/types.ts';
+
+const COLOR_LEFT = 0x4488ff;
+const COLOR_RIGHT = 0x44bb44;
 
 async function main() {
   const container = document.getElementById('app');
@@ -72,17 +79,40 @@ async function main() {
 
   let leftMesh: HullMesh | null = null;
   let rightMesh: HullMesh | null = null;
+  let leftProjection: HullProjectionDimensions | null = null;
+  let rightProjection: HullProjectionDimensions | null = null;
   if (leftHull) {
     leftMesh = new HullMesh(leftHull);
     sceneManager.scene.add(leftMesh.group);
+    leftProjection = new HullProjectionDimensions(leftMesh, COLOR_LEFT);
+    sceneManager.scene.add(leftProjection.group);
   }
   if (rightHull) {
     rightMesh = new HullMesh(rightHull);
     sceneManager.scene.add(rightMesh.group);
+    rightProjection = new HullProjectionDimensions(rightMesh, COLOR_RIGHT, true);
+    sceneManager.scene.add(rightProjection.group);
   }
+
+  const projectionGrid = new ProjectionGrid();
+  sceneManager.scene.add(projectionGrid.group);
 
   // 8. Status panel
   const statusPanel = new StatusPanel();
+
+  // 8a. Projection dimension panel
+  const projectionPanel = new ProjectionDimensionPanel();
+  projectionPanel.setProjections(leftProjection, rightProjection);
+  projectionPanel.onChange = (mode) => {
+    leftProjection?.setMode(mode);
+    rightProjection?.setMode(mode);
+    projectionGrid.setMode(mode);
+    updateAll();
+  };
+  projectionPanel.onHullVisibilityChange = (visible) => {
+    leftMesh?.setVisible(visible);
+    rightMesh?.setVisible(visible);
+  };
 
   // 8b. Task target point: marker (scene) + panel (top-left)
   const taskMarker = new TaskPointMarker(
@@ -103,11 +133,21 @@ async function main() {
     const result = fk.compute(jointState);
     robot.update(result);
     axes.update(result);
-    const w03 = result.linkTransforms['waist03'];
-    if (w03) {
-      leftMesh?.update(w03);
-      rightMesh?.update(w03);
+    const w01 = result.linkTransforms['waist01'];
+    if (w01) {
+      leftMesh?.update(w01);
+      rightMesh?.update(w01);
     }
+    leftProjection?.update();
+    rightProjection?.update();
+
+    const leftBounds = new THREE.Box3();
+    const rightBounds = new THREE.Box3();
+    if (leftMesh) leftMesh.getWorldAabb(leftBounds);
+    if (rightMesh) rightMesh.getWorldAabb(rightBounds);
+    projectionGrid.update(leftProjection, rightProjection, leftBounds, rightBounds);
+
+    projectionPanel.updateDisplay();
     const taskPos = taskPanel.isPlaced() ? taskPanel.getPosition() : null;
     statusPanel.update(result, jointState, taskPos);
   }
@@ -316,9 +356,9 @@ async function main() {
 function verifyZeroPoseFK(fk: ForwardKinematics) {
   const result = fk.compute({});
   const checks: [string, [number, number, number], number][] = [
-    ['waist03', [0.0, 0.1114, 1.3595], 1e-5],
-    ['left_ee_site', [0.212, 0.0864, 0.5415], 1e-4],
-    ['right_ee_site', [-0.212, 0.0864, 0.5415], 1e-4],
+    ['waist01', [0.0, 0.1575, 1.041], 1e-5],
+    ['left_ee_site', [0.212, 0.1325, 0.556], 1e-4],
+    ['right_ee_site', [-0.212, 0.1325, 0.556], 1e-4],
   ];
   for (const [name, expected, tol] of checks) {
     const t = result.linkTransforms[name];

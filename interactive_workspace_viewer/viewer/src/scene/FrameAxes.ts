@@ -12,7 +12,7 @@ export class FrameAxes {
     this.group.name = 'FrameAxes';
     this.triads = new Map();
 
-    const framesToShow = new Set(['leg02', 'leg03', 'waist01', 'waist03']);
+    const framesToShow = new Set(['leg02', 'leg03', 'waist01']);
 
     for (const frameName of framesToShow) {
       const triad = new THREE.Group();

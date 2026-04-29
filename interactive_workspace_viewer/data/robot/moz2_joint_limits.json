@@ -1,7 +1,7 @@
 {
   "schema": "moz2_joint_limits_v1",
   "source_urdf": "moz2_simplified.urdf",
-  "generated_at": "2026-04-27T06:17:26.460939+00:00",
+  "generated_at": "2026-04-29T06:40:44.101000+00:00",
   "joints": {
     "LegWaist-1": {
       "lower": -1.570796327,

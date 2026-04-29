@@ -9,7 +9,7 @@ const COLOR_HEAD = 0xe0e030;
 const COLOR_BASE = 0xffffff;
 
 const WAIST_LINKS = new Set([
-  'leg01', 'leg02', 'leg03', 'waist01', 'waist02', 'waist03',
+  'leg02', 'leg03', 'waist01',
 ]);
 const LEFT_LINKS = new Set([
   'left01', 'left02', 'left03', 'left04', 'left05', 'left06', 'left07', 'left_ee_site',
@@ -52,7 +52,7 @@ export class RobotSkeleton {
     // Joint spheres for every link in the skeleton (one per link).
     for (const linkName of skeleton.links) {
       const color = getChainColor(linkName);
-      const radius = linkName === 'waist03' ? 0.025 : 0.015;
+      const radius = linkName === 'waist01' ? 0.025 : 0.015;
       const sphereGeo = new THREE.SphereGeometry(radius, 16, 12);
       const sphereMat = new THREE.MeshPhongMaterial({ color });
       const sphere = new THREE.Mesh(sphereGeo, sphereMat);

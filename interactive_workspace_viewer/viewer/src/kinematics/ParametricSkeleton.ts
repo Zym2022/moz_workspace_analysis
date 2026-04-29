@@ -97,11 +97,8 @@ export class ParametricSkeleton {
     if (lw3) lw3.origin_xyz[2] = params.legwaist3_z;
 
     // --- waist_top_z_total ---
-    const wT = params.waist_top_z_total;
-    const w02 = findJoint(s, 'waist02_fixed');
-    const w03 = findJoint(s, 'waist03_fixed');
-    if (w02) w02.origin_xyz[2] = wT * 0.084 / 0.333;
-    if (w03) w03.origin_xyz[2] = wT * 0.249 / 0.333;
+    // Note: waist02_fixed and waist03_fixed removed in simplified URDF
+    // This parameter now has no effect on the skeleton
 
     return s;
   }

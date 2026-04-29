@@ -1,37 +1,18 @@
 {
   "schema": "moz2_skeleton_v1",
   "source_urdf": "moz2_simplified.urdf",
-  "generated_at": "2026-04-27T06:17:26.460939+00:00",
+  "generated_at": "2026-04-29T06:40:44.101000+00:00",
   "root": "base_link",
   "joints": [
     {
-      "name": "leg01_fixed",
-      "type": "fixed",
-      "parent": "base_link",
-      "child": "leg01",
-      "origin_xyz": [
-        0.0,
-        0.1114,
-        0.1875
-      ],
-      "origin_rpy": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "axis": null,
-      "limit_lower": null,
-      "limit_upper": null
-    },
-    {
       "name": "LegWaist-1",
       "type": "revolute",
-      "parent": "leg01",
+      "parent": "base_link",
       "child": "leg02",
       "origin_xyz": [
         0.0,
-        0.0,
-        0.122
+        0.1575,
+        0.324
       ],
       "origin_rpy": [
         0.0,
@@ -93,52 +74,14 @@
       "limit_upper": 1.396263402
     },
     {
-      "name": "waist02_fixed",
-      "type": "fixed",
-      "parent": "waist01",
-      "child": "waist02",
-      "origin_xyz": [
-        0.0,
-        0.0,
-        0.084
-      ],
-      "origin_rpy": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "axis": null,
-      "limit_lower": null,
-      "limit_upper": null
-    },
-    {
-      "name": "waist03_fixed",
-      "type": "fixed",
-      "parent": "waist02",
-      "child": "waist03",
-      "origin_xyz": [
-        0.0,
-        0.0,
-        0.249
-      ],
-      "origin_rpy": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "axis": null,
-      "limit_lower": null,
-      "limit_upper": null
-    },
-    {
       "name": "LeftArm-0",
       "type": "revolute",
-      "parent": "waist03",
+      "parent": "waist01",
       "child": "left01",
       "origin_xyz": [
         0.141,
         0.0,
-        0.0
+        0.333
       ],
       "origin_rpy": [
         0.0,
@@ -313,12 +256,12 @@
     {
       "name": "RightArm-0",
       "type": "revolute",
-      "parent": "waist03",
+      "parent": "waist01",
       "child": "right01",
       "origin_xyz": [
         -0.141,
         0.0,
-        0.0
+        0.333
       ],
       "origin_rpy": [
         0.0,
@@ -493,12 +436,12 @@
     {
       "name": "Head-0",
       "type": "revolute",
-      "parent": "waist03",
+      "parent": "waist01",
       "child": "head21",
       "origin_xyz": [
         0.0,
         0.0,
-        0.096
+        0.429
       ],
       "origin_rpy": [
         0.0,
@@ -558,12 +501,9 @@
   ],
   "links": [
     "base_link",
-    "leg01",
     "leg02",
     "leg03",
     "waist01",
-    "waist02",
-    "waist03",
     "left01",
     "left02",
     "left03",
@@ -586,12 +526,9 @@
   ],
   "key_frames": [
     "base_link",
-    "leg01",
     "leg02",
     "leg03",
     "waist01",
-    "waist02",
-    "waist03",
     "left01",
     "left04",
     "left06",
@@ -628,35 +565,11 @@
         ]
       ]
     },
-    "leg01": {
-      "position": [
-        0.0,
-        0.1114,
-        0.1875
-      ],
-      "rotation_matrix": [
-        [
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0
-        ]
-      ]
-    },
     "leg02": {
       "position": [
         0.0,
-        0.1114,
-        0.3095
+        0.1575,
+        0.324
       ],
       "rotation_matrix": [
         [
@@ -679,8 +592,8 @@
     "leg03": {
       "position": [
         0.0,
-        0.1114,
-        0.668
+        0.1575,
+        0.6825
       ],
       "rotation_matrix": [
         [
@@ -703,56 +616,8 @@
     "waist01": {
       "position": [
         0.0,
-        0.1114,
-        1.0265
-      ],
-      "rotation_matrix": [
-        [
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0
-        ]
-      ]
-    },
-    "waist02": {
-      "position": [
-        0.0,
-        0.1114,
-        1.1105
-      ],
-      "rotation_matrix": [
-        [
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0
-        ]
-      ]
-    },
-    "waist03": {
-      "position": [
-        0.0,
-        0.1114,
-        1.3595
+        0.1575,
+        1.041
       ],
       "rotation_matrix": [
         [
@@ -775,8 +640,8 @@
     "left01": {
       "position": [
         0.141,
-        0.1114,
-        1.3595
+        0.1575,
+        1.374
       ],
       "rotation_matrix": [
         [
@@ -799,8 +664,8 @@
     "right01": {
       "position": [
         -0.141,
-        0.1114,
-        1.3595
+        0.1575,
+        1.374
       ],
       "rotation_matrix": [
         [
@@ -823,8 +688,8 @@
     "head21": {
       "position": [
         0.0,
-        0.1114,
-        1.4555
+        0.1575,
+        1.47
       ],
       "rotation_matrix": [
         [
@@ -847,8 +712,8 @@
     "left02": {
       "position": [
         0.22,
-        0.1114,
-        1.3595
+        0.1575,
+        1.374
       ],
       "rotation_matrix": [
         [
@@ -871,8 +736,8 @@
     "right02": {
       "position": [
         -0.22,
-        0.1114,
-        1.3595
+        0.1575,
+        1.374
       ],
       "rotation_matrix": [
         [
@@ -895,8 +760,8 @@
     "head22": {
       "position": [
         0.0,
-        0.1114,
-        1.5585
+        0.1575,
+        1.573
       ],
       "rotation_matrix": [
         [
@@ -919,8 +784,8 @@
     "left03": {
       "position": [
         0.22,
-        0.1114,
-        1.2335
+        0.1575,
+        1.248
       ],
       "rotation_matrix": [
         [
@@ -943,8 +808,8 @@
     "right03": {
       "position": [
         -0.22,
-        0.1114,
-        1.2335
+        0.1575,
+        1.248
       ],
       "rotation_matrix": [
         [
@@ -967,8 +832,8 @@
     "head23": {
       "position": [
         0.0,
-        0.1114,
-        1.5985
+        0.1575,
+        1.613
       ],
       "rotation_matrix": [
         [
@@ -991,8 +856,8 @@
     "left04": {
       "position": [
         0.22,
-        0.0864,
-        1.0255
+        0.1325,
+        1.04
       ],
       "rotation_matrix": [
         [
@@ -1015,8 +880,8 @@
     "right04": {
       "position": [
         -0.22,
-        0.0864,
-        1.0255
+        0.1325,
+        1.04
       ],
       "rotation_matrix": [
         [
@@ -1039,8 +904,8 @@
     "left05": {
       "position": [
         0.22,
-        0.0864,
-        0.8955
+        0.1325,
+        0.91
       ],
       "rotation_matrix": [
         [
@@ -1063,8 +928,8 @@
     "right05": {
       "position": [
         -0.22,
-        0.0864,
-        0.8955
+        0.1325,
+        0.91
       ],
       "rotation_matrix": [
         [
@@ -1087,8 +952,8 @@
     "left06": {
       "position": [
         0.22,
-        0.0864,
-        0.6915
+        0.1325,
+        0.706
       ],
       "rotation_matrix": [
         [
@@ -1111,8 +976,8 @@
     "right06": {
       "position": [
         -0.22,
-        0.0864,
-        0.6915
+        0.1325,
+        0.706
       ],
       "rotation_matrix": [
         [
@@ -1135,8 +1000,8 @@
     "left07": {
       "position": [
         0.22,
-        0.0864,
-        0.6415
+        0.1325,
+        0.656
       ],
       "rotation_matrix": [
         [
@@ -1159,8 +1024,8 @@
     "right07": {
       "position": [
         -0.22,
-        0.0864,
-        0.6415
+        0.1325,
+        0.656
       ],
       "rotation_matrix": [
         [
@@ -1183,8 +1048,8 @@
     "left_ee_site": {
       "position": [
         0.212,
-        0.0864,
-        0.5415
+        0.1325,
+        0.556
       ],
       "rotation_matrix": [
         [
@@ -1207,8 +1072,8 @@
     "right_ee_site": {
       "position": [
         -0.212,
-        0.0864,
-        0.5415
+        0.1325,
+        0.556
       ],
       "rotation_matrix": [
         [
@@ -1231,17 +1096,10 @@
   },
   "chains": {
     "waist": {
-      "fixed_pre": [
-        "leg01_fixed"
-      ],
       "revolute": [
         "LegWaist-1",
         "LegWaist-2",
         "LegWaist-3"
-      ],
-      "fixed_post": [
-        "waist02_fixed",
-        "waist03_fixed"
       ]
     },
     "left_arm": {

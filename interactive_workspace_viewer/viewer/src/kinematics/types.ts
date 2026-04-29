@@ -61,7 +61,7 @@ export interface HullData {
   faces: [number, number, number][];
   bbox_min: [number, number, number];
   bbox_max: [number, number, number];
-  ee_zero_pose_in_waist03: [number, number, number];
+  ee_zero_pose_in_waist01: [number, number, number];
   generated_at: string;
   notes: string[];
 }

@@ -80,8 +80,8 @@ def mirror_hull(left_hull_data):
         left_hull_data["bbox_max"][1],
         left_hull_data["bbox_max"][2],
     ]
-    ee = left_hull_data["ee_zero_pose_in_waist03"]
-    right["ee_zero_pose_in_waist03"] = [-ee[0], ee[1], ee[2]]
+    ee = left_hull_data["ee_zero_pose_in_waist01"]
+    right["ee_zero_pose_in_waist01"] = [-ee[0], ee[1], ee[2]]
     right["joint_names"] = [n.replace("Left", "Right") for n in left_hull_data["joint_names"]]
     right["notes"] = list(left_hull_data["notes"]) + ["Mirrored from left arm (x -> -x, reversed winding)."]
     return right
@@ -128,9 +128,9 @@ def generate_hull(arm_side, arm_upper_z, arm_elbow_y, arm_forearm_z, arm_wrist_z
     elapsed = time.time() - t0
     print(f"  FK done in {elapsed:.1f}s")
 
-    # EE zero pose in waist03
+    # EE zero pose in waist01
     ee_zero, _ = kin.forward_kinematics(np.zeros(n_joints))
-    print(f"  EE zero pose in waist03: {ee_zero}")
+    print(f"  EE zero pose in waist01: {ee_zero}")
 
     # Convex hull
     print(f"  Computing convex hull...")
@@ -155,7 +155,7 @@ def generate_hull(arm_side, arm_upper_z, arm_elbow_y, arm_forearm_z, arm_wrist_z
     hull_data = {
         "schema": "moz2_arm_hull_v1",
         "arm": arm_side,
-        "frame": "waist03",
+        "frame": "waist01",
         "source_urdf": "moz2_simplified.urdf",
         "n_samples": n_samples,
         "sobol_m": sobol_m,
@@ -169,7 +169,7 @@ def generate_hull(arm_side, arm_upper_z, arm_elbow_y, arm_forearm_z, arm_wrist_z
         "faces": [list(int(x) for x in f) for f in compact_faces],
         "bbox_min": [round(float(x), 4) for x in bbox_min],
         "bbox_max": [round(float(x), 4) for x in bbox_max],
-        "ee_zero_pose_in_waist03": [round(float(x), 6) for x in ee_zero],
+        "ee_zero_pose_in_waist01": [round(float(x), 6) for x in ee_zero],
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "parametric": {
             "arm_upper_z_total": arm_upper_z,
@@ -179,7 +179,7 @@ def generate_hull(arm_side, arm_upper_z, arm_elbow_y, arm_forearm_z, arm_wrist_z
         },
         "notes": [
             "Parametric convex hull with modified arm geometry.",
-            "Convex hull of sampled EE positions in waist03 frame.",
+            "Convex hull of sampled EE positions in waist01 frame.",
             "Interior may include unreachable points.",
         ],
     }

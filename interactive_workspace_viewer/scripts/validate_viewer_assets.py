@@ -19,18 +19,16 @@ VIEWER_ROOT = SCRIPT_DIR.parent
 
 SKEL_PATH = VIEWER_ROOT / "data" / "robot" / "moz2_skeleton.json"
 LIMITS_PATH = VIEWER_ROOT / "data" / "robot" / "moz2_joint_limits.json"
-LEFT_HULL_PATH = VIEWER_ROOT / "data" / "hulls" / "left_arm_hull_waist03.json"
-RIGHT_HULL_PATH = VIEWER_ROOT / "data" / "hulls" / "right_arm_hull_waist03.json"
+LEFT_HULL_PATH = VIEWER_ROOT / "data" / "hulls" / "left_arm_hull_waist01.json"
+RIGHT_HULL_PATH = VIEWER_ROOT / "data" / "hulls" / "right_arm_hull_waist01.json"
 
 # Reference values
-REF_WAIST03 = [0.0, 0.1114, 1.3595]
-REF_LEFT_EE = [0.212, 0.0864, 0.5415]
-REF_RIGHT_EE = [-0.212, 0.0864, 0.5415]
+REF_WAIST01 = [0.0, 0.1575, 1.041]
+REF_LEFT_EE = [0.212, 0.1325, 0.556]
+REF_RIGHT_EE = [-0.212, 0.1325, 0.556]
 
 EXPECTED_JOINTS = [
-    "leg01_fixed",
     "LegWaist-1", "LegWaist-2", "LegWaist-3",
-    "waist02_fixed", "waist03_fixed",
 ] + [f"LeftArm-{i}" for i in range(7)] + [
     "left_ee_site_fixed",
 ] + [f"RightArm-{i}" for i in range(7)] + [
@@ -77,15 +75,15 @@ def validate_skeleton():
     # Zero-pose FK checks
     zp = skel.get("zero_pose_world_transforms", {})
     check("zero_pose has base_link", "base_link" in zp)
-    check("zero_pose has waist03", "waist03" in zp)
+    check("zero_pose has waist01", "waist01" in zp)
     check("zero_pose has left_ee_site", "left_ee_site" in zp)
     check("zero_pose has right_ee_site", "right_ee_site" in zp)
 
-    if "waist03" in zp:
-        pos = zp["waist03"]["position"]
-        check("waist03 position matches ref (tol=1e-5)",
-              close_enough(pos, REF_WAIST03, 1e-5),
-              f"got {pos}, expected {REF_WAIST03}")
+    if "waist01" in zp:
+        pos = zp["waist01"]["position"]
+        check("waist01 position matches ref (tol=1e-5)",
+              close_enough(pos, REF_WAIST01, 1e-5),
+              f"got {pos}, expected {REF_WAIST01}")
 
     if "left_ee_site" in zp:
         pos = zp["left_ee_site"]["position"]
@@ -123,7 +121,7 @@ def validate_hull(path, arm_side):
 
     check("schema == moz2_arm_hull_v1", hull.get("schema") == "moz2_arm_hull_v1")
     check(f"arm == {arm_side}", hull.get("arm") == arm_side)
-    check("frame == waist03", hull.get("frame") == "waist03")
+    check("frame == waist01", hull.get("frame") == "waist01")
 
     n_verts = hull["n_hull_vertices"]
     n_faces = hull["n_hull_faces"]
