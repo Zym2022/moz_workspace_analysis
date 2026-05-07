@@ -131,6 +131,11 @@ async function main() {
 
   const taskPanel = new TaskPointPanel();
 
+  // 8c. ROI manipulability grid + panel (created early so updateAll can reference them)
+  const roiGrid = new ROIVoxelGrid();
+  sceneManager.scene.add(roiGrid.group);
+  const roiPanel = new ROIPanel();
+
   // 9. Update function
   function updateAll() {
     const result = fk.compute(jointState);
@@ -140,6 +145,12 @@ async function main() {
     if (w01) {
       leftMesh?.update(w01);
       rightMesh?.update(w01);
+      roiGrid.update(w01);
+      // Update ROI panel bounds for all loaded ROIs
+      for (const roiId of roiGrid.getROIIds()) {
+        const bounds = roiGrid.getTransformedBounds(roiId);
+        if (bounds) roiPanel.updateBounds(roiId, bounds);
+      }
     }
     leftProjection?.update();
     rightProjection?.update();
@@ -351,10 +362,13 @@ async function main() {
   updateAll();
   verifyZeroPoseFK(fk);
 
-  // 13. ROI manipulability (independent feature)
-  const roiGrid = new ROIVoxelGrid();
-  sceneManager.scene.add(roiGrid.group);
-  const roiPanel = new ROIPanel();
+  // 13. ROI manipulability wiring
+  // Set ROI zero-pose reference for waist tracking
+  const zeroResult = fk.compute({ 'LegWaist-1': 0, 'LegWaist-2': 0, 'LegWaist-3': 0 });
+  const zeroW01 = zeroResult.linkTransforms['waist01'];
+  if (zeroW01) {
+    roiGrid.setZeroPoseTransform(zeroW01);
+  }
 
   roiPanel.onVisibilityChange = (roiId, visible) => roiGrid.setVisible(roiId, visible);
   roiPanel.onOpacityChange = (roiId, opacity) => roiGrid.setOpacity(roiId, opacity);

@@ -3,6 +3,7 @@ import type { ROIData, ROIRequest, ROIVoxel } from '../kinematics/types.ts';
 interface ROISection {
   roiId: string;
   wrapper: HTMLDivElement;
+  boundsEl: HTMLElement;
 }
 
 export class ROIPanel {
@@ -268,7 +269,19 @@ export class ROIPanel {
     wrapper.appendChild(cbWrap);
 
     this.body.appendChild(wrapper);
-    this.sections.set(data.roi_id, { roiId: data.roi_id, wrapper });
+    this.sections.set(data.roi_id, { roiId: data.roi_id, wrapper, boundsEl: bounds });
+  }
+
+  updateBounds(roiId: string, bounds: { x_min: number; x_max: number; y_min: number; y_max: number; z_min: number; z_max: number }): void {
+    const sec = this.sections.get(roiId);
+    if (!sec) return;
+    const data = this.roiDataMap.get(roiId);
+    const res = data ? data.resolution : 0;
+    sec.boundsEl.innerHTML =
+      `X: ${mm(bounds.x_min)} – ${mm(bounds.x_max)} mm<br>` +
+      `Y: ${mm(bounds.y_min)} – ${mm(bounds.y_max)} mm<br>` +
+      `Z: ${mm(bounds.z_min)} – ${mm(bounds.z_max)} mm<br>` +
+      `Resolution: ${mm(res)} mm`;
   }
 
   removeROI(roiId: string): void {

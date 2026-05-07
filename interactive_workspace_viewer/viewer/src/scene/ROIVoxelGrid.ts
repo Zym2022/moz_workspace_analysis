@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ROIData } from '../kinematics/types.ts';
+import type { ROIData, FrameTransform } from '../kinematics/types.ts';
 
 interface RenderedROI {
   data: ROIData;
@@ -20,10 +20,80 @@ function viridisColor(t: number): THREE.Color {
 export class ROIVoxelGrid {
   public group: THREE.Group;
   private rois: Map<string, RenderedROI> = new Map();
+  private zeroWaist01Matrix: THREE.Matrix4 | null = null;
 
   constructor() {
     this.group = new THREE.Group();
     this.group.name = 'ROI_VoxelGrids';
+  }
+
+  setZeroPoseTransform(waist01Transform: FrameTransform): void {
+    this.zeroWaist01Matrix = new THREE.Matrix4();
+    const pos = waist01Transform.position;
+    const quat = waist01Transform.quaternion;
+    this.zeroWaist01Matrix.compose(
+      new THREE.Vector3(pos[0], pos[1], pos[2]),
+      quat,
+      new THREE.Vector3(1, 1, 1),
+    );
+  }
+
+  update(waist01Transform: FrameTransform): void {
+    if (!this.zeroWaist01Matrix) return;
+
+    // T_current
+    const currentMatrix = new THREE.Matrix4();
+    const pos = waist01Transform.position;
+    const quat = waist01Transform.quaternion;
+    currentMatrix.compose(
+      new THREE.Vector3(pos[0], pos[1], pos[2]),
+      quat,
+      new THREE.Vector3(1, 1, 1),
+    );
+
+    // delta = T_current * T_zero^{-1}
+    const zeroInverse = new THREE.Matrix4().copy(this.zeroWaist01Matrix).invert();
+    const delta = new THREE.Matrix4().multiplyMatrices(currentMatrix, zeroInverse);
+
+    this.group.matrixAutoUpdate = false;
+    this.group.matrix.copy(delta);
+  }
+
+  getROIIds(): string[] {
+    return Array.from(this.rois.keys());
+  }
+
+  getTransformedBounds(roiId: string): { x_min: number; x_max: number; y_min: number; y_max: number; z_min: number; z_max: number } | null {
+    const r = this.rois.get(roiId);
+    if (!r) return null;
+
+    const roi = r.data.roi;
+    // 8 corners of the original ROI box
+    const corners = [
+      [roi.x_min, roi.y_min, roi.z_min],
+      [roi.x_max, roi.y_min, roi.z_min],
+      [roi.x_min, roi.y_max, roi.z_min],
+      [roi.x_max, roi.y_max, roi.z_min],
+      [roi.x_min, roi.y_min, roi.z_max],
+      [roi.x_max, roi.y_min, roi.z_max],
+      [roi.x_min, roi.y_max, roi.z_max],
+      [roi.x_max, roi.y_max, roi.z_max],
+    ];
+
+    const v = new THREE.Vector3();
+    let xMin = Infinity, xMax = -Infinity;
+    let yMin = Infinity, yMax = -Infinity;
+    let zMin = Infinity, zMax = -Infinity;
+
+    for (const c of corners) {
+      v.set(c[0], c[1], c[2]);
+      v.applyMatrix4(this.group.matrix);
+      xMin = Math.min(xMin, v.x); xMax = Math.max(xMax, v.x);
+      yMin = Math.min(yMin, v.y); yMax = Math.max(yMax, v.y);
+      zMin = Math.min(zMin, v.z); zMax = Math.max(zMax, v.z);
+    }
+
+    return { x_min: xMin, x_max: xMax, y_min: yMin, y_max: yMax, z_min: zMin, z_max: zMax };
   }
 
   addROI(data: ROIData): void {
