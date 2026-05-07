@@ -1,4 +1,4 @@
-import type { ROIData, ROIRequest } from '../kinematics/types.ts';
+import type { ROIData, ROIRequest, ROIVoxel } from '../kinematics/types.ts';
 
 interface ROISection {
   roiId: string;
@@ -10,6 +10,7 @@ export class ROIPanel {
   public onOpacityChange: ((roiId: string, opacity: number) => void) | null = null;
   public onShowUnreachableChange: ((roiId: string, show: boolean) => void) | null = null;
   public onCompute: ((params: ROIRequest) => void) | null = null;
+  public onShowBestConfig: ((roiId: string, bestQ: number[]) => void) | null = null;
 
   private container: HTMLDivElement;
   private statusLine: HTMLDivElement;
@@ -17,6 +18,7 @@ export class ROIPanel {
   private placeholder: HTMLDivElement;
   private computeBtn: HTMLButtonElement;
   private sections: Map<string, ROISection> = new Map();
+  private roiDataMap: Map<string, ROIData> = new Map();
 
   constructor() {
     this.container = document.createElement('div');
@@ -90,6 +92,7 @@ export class ROIPanel {
   }
 
   addROI(data: ROIData): void {
+    this.roiDataMap.set(data.roi_id, data);
     const existing = this.sections.get(data.roi_id);
     if (existing) {
       this.body.removeChild(existing.wrapper);
@@ -200,6 +203,44 @@ export class ROIPanel {
     opRow.appendChild(opVal);
     wrapper.appendChild(opRow);
 
+    // Show Best Config button
+    const bestVoxel = data.voxels
+      .filter((v) => v.reachable && v.best_q !== null)
+      .reduce<ROIVoxel | null>((best, v) => {
+        if (!best || v.mu_trans > best.mu_trans) return v;
+        return best;
+      }, null);
+
+    const bestBtn = document.createElement('button');
+    this.styleButton(bestBtn);
+    Object.assign(bestBtn.style, {
+      background: '#4488ff',
+      marginTop: '6px',
+      width: '100%',
+    });
+    if (bestVoxel && bestVoxel.best_q) {
+      bestBtn.textContent = `Show Best Config (mu=${bestVoxel.mu_trans.toFixed(3)})`;
+      bestBtn.addEventListener('click', () => {
+        const currentData = this.roiDataMap.get(data.roi_id);
+        if (!currentData) return;
+        const best = currentData.voxels
+          .filter((v) => v.reachable && v.best_q !== null)
+          .reduce<ROIVoxel | null>((b, v) => {
+            if (!b || v.mu_trans > b.mu_trans) return v;
+            return b;
+          }, null);
+        if (best && best.best_q && this.onShowBestConfig) {
+          this.onShowBestConfig(data.roi_id, best.best_q);
+        }
+      });
+    } else {
+      bestBtn.textContent = 'Show Best Config (N/A)';
+      bestBtn.disabled = true;
+      bestBtn.style.opacity = '0.5';
+      bestBtn.style.cursor = 'not-allowed';
+    }
+    wrapper.appendChild(bestBtn);
+
     // Colorbar
     const cbWrap = document.createElement('div');
     cbWrap.style.marginTop = '6px';
@@ -231,6 +272,7 @@ export class ROIPanel {
   }
 
   removeROI(roiId: string): void {
+    this.roiDataMap.delete(roiId);
     const sec = this.sections.get(roiId);
     if (!sec) return;
     this.body.removeChild(sec.wrapper);

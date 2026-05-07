@@ -359,6 +359,13 @@ async function main() {
   roiPanel.onVisibilityChange = (roiId, visible) => roiGrid.setVisible(roiId, visible);
   roiPanel.onOpacityChange = (roiId, opacity) => roiGrid.setOpacity(roiId, opacity);
   roiPanel.onShowUnreachableChange = (roiId, show) => roiGrid.setShowUnreachable(roiId, show);
+  roiPanel.onShowBestConfig = (_roiId, bestQ) => {
+    const armJointNames = ['LeftArm-0', 'LeftArm-1', 'LeftArm-2', 'LeftArm-3', 'LeftArm-4', 'LeftArm-5', 'LeftArm-6'];
+    for (let i = 0; i < 7; i++) {
+      jointState[armJointNames[i]] = bestQ[i];
+    }
+    updateAll();
+  };
   roiPanel.onCompute = async (params) => {
     roiPanel.setStatus('Computing ROI...');
     const data = await computeROI(params);
