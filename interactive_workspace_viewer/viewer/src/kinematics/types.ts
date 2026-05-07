@@ -109,3 +109,52 @@ export interface ParametricParams {
   legwaist3_z: number;
   waist_top_z_total: number;
 }
+
+// ROI Manipulability types (Phase 4A)
+
+export interface ROIBounds {
+  x_min: number; x_max: number;
+  y_min: number; y_max: number;
+  z_min: number; z_max: number;
+}
+
+export interface ROIVoxel {
+  ijk: [number, number, number];
+  center: [number, number, number];
+  mu_trans: number;
+  reachable: boolean;
+  best_q: number[] | null;
+}
+
+export interface ROIData {
+  schema: string;
+  roi_id: string;
+  arm: string;
+  frame: string;
+  roi: ROIBounds;
+  resolution: number;
+  ee_orientation: number[][];
+  waist_angles: number[];
+  metric: string;
+  n_ik_attempts: number;
+  voxels: ROIVoxel[];
+  stats: {
+    total: number;
+    reachable: number;
+    mu_trans_min: number;
+    mu_trans_max: number;
+    mu_trans_mean: number;
+    mu_trans_p50: number;
+  };
+  generated_at: string;
+}
+
+export interface ROIRequest {
+  roi_id: string;
+  arm: string;
+  roi: ROIBounds;
+  resolution: number;
+  ee_orientation: number[][];
+  waist_angles: number[];
+  n_ik_attempts: number;
+}

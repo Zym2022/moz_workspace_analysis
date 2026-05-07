@@ -19,6 +19,9 @@ import { loadJointLimits } from './loaders/JointLimitsLoader.ts';
 import { ForwardKinematics } from './kinematics/ForwardKinematics.ts';
 import { ParametricSkeleton, DEFAULT_PARAMS } from './kinematics/ParametricSkeleton.ts';
 import { ParametricPanel } from './ui/ParametricPanel.ts';
+import { ROIVoxelGrid } from './scene/ROIVoxelGrid.ts';
+import { ROIPanel } from './ui/ROIPanel.ts';
+import { loadStaticROI, computeROI } from './loaders/ROILoader.ts';
 import type { JointState, ParametricParams, SkeletonData } from './kinematics/types.ts';
 
 const COLOR_LEFT = 0x4488ff;
@@ -348,7 +351,35 @@ async function main() {
   updateAll();
   verifyZeroPoseFK(fk);
 
-  // 13. Start render loop
+  // 13. ROI manipulability (independent feature)
+  const roiGrid = new ROIVoxelGrid();
+  sceneManager.scene.add(roiGrid.group);
+  const roiPanel = new ROIPanel();
+
+  roiPanel.onVisibilityChange = (roiId, visible) => roiGrid.setVisible(roiId, visible);
+  roiPanel.onOpacityChange = (roiId, opacity) => roiGrid.setOpacity(roiId, opacity);
+  roiPanel.onShowUnreachableChange = (roiId, show) => roiGrid.setShowUnreachable(roiId, show);
+  roiPanel.onCompute = async (params) => {
+    roiPanel.setStatus('Computing ROI...');
+    const data = await computeROI(params);
+    if (data) {
+      roiGrid.addROI(data);
+      roiPanel.addROI(data);
+      roiPanel.setStatus('Computed');
+    } else {
+      roiPanel.setStatus('Compute failed — is hull_server running?');
+    }
+  };
+
+  // Auto-load case1
+  loadStaticROI('case1_left_front').then((data) => {
+    if (data) {
+      roiGrid.addROI(data);
+      roiPanel.addROI(data);
+    }
+  });
+
+  // 14. Start render loop
   sceneManager.start();
   console.log('[Viewer] MOZ2 Workspace Viewer Phase 3.1 started.');
 }

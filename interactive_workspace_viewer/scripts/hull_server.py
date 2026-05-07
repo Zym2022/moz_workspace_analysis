@@ -23,6 +23,8 @@ DATA_DIR = VIEWER_ROOT / "data"
 # Import recompute logic
 sys.path.insert(0, str(SCRIPT_DIR))
 from recompute_hulls import compute_hash, generate_hull, mirror_hull
+from compute_roi_manipulability import compute_roi_manipulability
+import numpy as np
 from datetime import datetime, timezone
 
 
@@ -43,6 +45,8 @@ class HullRequestHandler(SimpleHTTPRequestHandler):
 
         if path == "/recompute":
             self._handle_recompute()
+        elif path == "/roi-manipulability":
+            self._handle_roi_manipulability()
         else:
             self.send_error(404, "Not Found")
 
@@ -158,6 +162,116 @@ class HullRequestHandler(SimpleHTTPRequestHandler):
             traceback.print_exc()
             self.send_error(500, f"Internal Server Error: {e}")
 
+    def _handle_roi_manipulability(self):
+        """Handle POST /roi-manipulability request."""
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+            params = json.loads(body)
+
+            roi_id = params.get("roi_id", "roi_default")
+            arm = params.get("arm", "left")
+            roi = params.get("roi", {})
+            resolution = float(params.get("resolution", 0.05))
+            ee_orientation = np.array(params.get("ee_orientation",
+                [[1, 0, 0], [0, 0, 1], [0, -1, 0]]), dtype=float)
+            waist_angles = list(params.get("waist_angles", [0.0, 0.0, 0.0]))
+            n_ik_attempts = int(params.get("n_ik_attempts", 20))
+
+            urdf_path = str((VIEWER_ROOT.parent / "moz2_simplified.urdf").resolve())
+
+            print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ROI manipulability request:")
+            print(f"  roi_id: {roi_id}, arm: {arm}")
+            print(f"  roi: {roi}")
+            print(f"  resolution: {resolution}, n_ik_attempts: {n_ik_attempts}")
+            print(f"  URDF: {urdf_path}")
+
+            result = compute_roi_manipulability(
+                urdf_path=urdf_path,
+                roi_bounds=roi,
+                resolution=resolution,
+                ee_orientation=ee_orientation,
+                waist_angles=waist_angles,
+                arm=arm,
+                n_ik_attempts=n_ik_attempts,
+            )
+            result['roi_id'] = roi_id
+
+            output_dir = DATA_DIR / "roi"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / f"{roi_id}.json"
+            with open(output_path, "w") as f:
+                json.dump(result, f, indent=2)
+            print(f"  Wrote: {output_path}")
+
+            response = {
+                "status": "ok",
+                "roi_id": roi_id,
+                "url": f"/roi/{roi_id}.json",
+            }
+            self._send_json_response(response)
+
+        except Exception as e:
+            print(f"  ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            self.send_error(500, f"Internal Server Error: {e}")
+
+    def _handle_roi_manipulability(self):
+        """Handle POST /roi-manipulability request."""
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+            params = json.loads(body)
+
+            roi_id = params.get("roi_id", "roi_default")
+            arm = params.get("arm", "left")
+            roi = params.get("roi", {})
+            resolution = float(params.get("resolution", 0.05))
+            ee_orientation = np.array(params.get("ee_orientation",
+                [[1, 0, 0], [0, 0, 1], [0, -1, 0]]), dtype=float)
+            waist_angles = list(params.get("waist_angles", [0.0, 0.0, 0.0]))
+            n_ik_attempts = int(params.get("n_ik_attempts", 20))
+
+            urdf_path = str((VIEWER_ROOT.parent / "moz2_simplified.urdf").resolve())
+
+            print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ROI manipulability request:")
+            print(f"  roi_id: {roi_id}, arm: {arm}")
+            print(f"  roi: {roi}")
+            print(f"  resolution: {resolution}, n_ik_attempts: {n_ik_attempts}")
+            print(f"  URDF: {urdf_path}")
+
+            result = compute_roi_manipulability(
+                urdf_path=urdf_path,
+                roi_bounds=roi,
+                resolution=resolution,
+                ee_orientation=ee_orientation,
+                waist_angles=waist_angles,
+                arm=arm,
+                n_ik_attempts=n_ik_attempts,
+            )
+            result['roi_id'] = roi_id
+
+            output_dir = DATA_DIR / "roi"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / f"{roi_id}.json"
+            with open(output_path, "w") as f:
+                json.dump(result, f, indent=2)
+            print(f"  Wrote: {output_path}")
+
+            response = {
+                "status": "ok",
+                "roi_id": roi_id,
+                "url": f"/roi/{roi_id}.json",
+            }
+            self._send_json_response(response)
+
+        except Exception as e:
+            print(f"  ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            self.send_error(500, f"Internal Server Error: {e}")
+
     def _send_json_response(self, data):
         """Send JSON response with CORS headers."""
         self.send_response(200)
@@ -179,7 +293,9 @@ def main():
     print(f"Serving files from: {DATA_DIR}")
     print(f"\nEndpoints:")
     print(f"  POST /recompute  — recompute parametric hulls")
+    print(f"  POST /roi-manipulability  — compute ROI manipulability voxel grid")
     print(f"  GET  /parametric/... — serve hull files")
+    print(f"  GET  /roi/... — serve ROI manipulability files")
     print(f"\nPress Ctrl+C to stop.\n")
     try:
         server.serve_forever()
