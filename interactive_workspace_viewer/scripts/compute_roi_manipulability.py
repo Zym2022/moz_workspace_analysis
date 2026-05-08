@@ -200,10 +200,10 @@ def compute_roi_manipulability(urdf_path: str, roi_bounds: Dict[str, float],
     p_b_w = T_b_w[:3, 3]
     R_w_b = R_b_w.T
 
-    xs = np.arange(roi_bounds['x_min'], roi_bounds['x_max'], resolution)
-    ys = np.arange(roi_bounds['y_min'], roi_bounds['y_max'], resolution)
-    zs = np.arange(roi_bounds['z_min'], roi_bounds['z_max'], resolution)
-    nx, ny, nz = len(xs), len(ys), len(zs)
+    # Integer voxel counts (avoid np.arange float-precision off-by-one)
+    nx = int(round((roi_bounds['x_max'] - roi_bounds['x_min']) / resolution))
+    ny = int(round((roi_bounds['y_max'] - roi_bounds['y_min']) / resolution))
+    nz = int(round((roi_bounds['z_max'] - roi_bounds['z_min']) / resolution))
     total = nx * ny * nz
 
     voxels = []
@@ -337,7 +337,7 @@ CASE_CONFIGS = {
     'case2': {
         'roi_id': 'tidy_desk',
         'roi_bounds': {'x_min': 0.0, 'x_max': 0.5,
-                       'y_min': -0.75, 'y_max': -0.25,
+                       'y_min': -0.65, 'y_max': -0.15,
                        'z_min': 1.0, 'z_max': 1.2},
         'resolution': 0.05,
         'ee_orientation': [[1, 0, 0], [0, 0, 1], [0, -1, 0]],
@@ -345,6 +345,18 @@ CASE_CONFIGS = {
         'arm': 'left',
         'n_ik_attempts': 20,
         'label': 'tidy desk',
+    },
+    'case3': {
+        'roi_id': 'make_bed',
+        'roi_bounds': {'x_min': 0.0, 'x_max': 0.5,
+                       'y_min': -0.55, 'y_max': -0.15,
+                       'z_min': 0.7, 'z_max': 1.0},
+        'resolution': 0.05,
+        'ee_orientation': [[1, 0, 0], [0, 0, 1], [0, -1, 0]],
+        'waist_angles': [0.0, 0.0, 0.0],
+        'arm': 'left',
+        'n_ik_attempts': 20,
+        'label': 'make bed',
     },
 }
 

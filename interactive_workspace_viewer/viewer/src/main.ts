@@ -7,7 +7,6 @@ import { ZUpGrid } from './scene/GridHelper.ts';
 import { TaskPointMarker } from './scene/TaskPointMarker.ts';
 import { HullProjectionDimensions } from './scene/HullProjectionDimensions.ts';
 import { ProjectionGrid } from './scene/ProjectionGrid.ts';
-import { InfoOverlay } from './ui/InfoOverlay.ts';
 import { ControlPanel } from './ui/ControlPanel.ts';
 import { StatusPanel } from './ui/StatusPanel.ts';
 import { CameraPresets } from './ui/CameraPresets.ts';
@@ -40,9 +39,6 @@ async function main() {
   // 2. Grid
   const grid = new ZUpGrid();
   sceneManager.scene.add(grid.group);
-
-  // 3. Warning overlay
-  new InfoOverlay();
 
   // 4. Load data
   const [skeleton, jointLimits, leftHull, rightHull] = await Promise.all([
@@ -392,8 +388,8 @@ async function main() {
     }
   };
 
-  // Auto-load pick_laundry + tidy_desk
-  for (const id of ['pick_laundry', 'tidy_desk']) {
+  // Auto-load pick_laundry + tidy_desk + make_bed
+  for (const id of ['pick_laundry', 'tidy_desk', 'make_bed']) {
     loadStaticROI(id).then((data) => {
       if (data) {
         roiGrid.addROI(data);

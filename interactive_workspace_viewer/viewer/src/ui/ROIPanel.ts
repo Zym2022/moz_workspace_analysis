@@ -3,7 +3,10 @@ import type { ROIData, ROIRequest, ROIVoxel } from '../kinematics/types.ts';
 interface ROISection {
   roiId: string;
   wrapper: HTMLDivElement;
+  body: HTMLDivElement;
   boundsEl: HTMLElement;
+  chevron: HTMLSpanElement;
+  expanded: boolean;
 }
 
 export class ROIPanel {
@@ -26,32 +29,39 @@ export class ROIPanel {
       position: 'fixed',
       bottom: '12px',
       left: '12px',
-      maxWidth: '320px',
-      padding: '12px',
+      width: '260px',
+      padding: '8px 10px',
       background: 'rgba(0, 0, 0, 0.85)',
       color: '#e0e0e0',
       fontFamily: 'monospace',
-      fontSize: '12px',
+      fontSize: '11px',
       border: '1px solid #444',
       borderRadius: '6px',
       zIndex: '1000',
       pointerEvents: 'auto',
-      maxHeight: '70vh',
+      maxHeight: '80vh',
       overflowY: 'auto',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
     });
 
     const title = document.createElement('div');
     title.textContent = 'ROI Reachability';
-    title.style.fontWeight = 'bold';
-    title.style.fontSize = '13px';
-    title.style.marginBottom = '6px';
+    Object.assign(title.style, {
+      fontWeight: 'bold',
+      fontSize: '12px',
+      marginBottom: '4px',
+      color: '#fff',
+      letterSpacing: '0.3px',
+    });
     this.container.appendChild(title);
 
     this.statusLine = document.createElement('div');
-    this.statusLine.style.fontSize = '11px';
-    this.statusLine.style.color = '#aaa';
-    this.statusLine.style.marginBottom = '8px';
-    this.statusLine.textContent = '';
+    Object.assign(this.statusLine.style, {
+      fontSize: '10px',
+      color: '#888',
+      marginBottom: '6px',
+      minHeight: '12px',
+    });
     this.container.appendChild(this.statusLine);
 
     this.body = document.createElement('div');
@@ -59,9 +69,7 @@ export class ROIPanel {
 
     this.placeholder = document.createElement('div');
     this.placeholder.textContent = 'No ROI loaded';
-    this.placeholder.style.color = '#888';
-    this.placeholder.style.fontStyle = 'italic';
-    this.placeholder.style.marginBottom = '8px';
+    Object.assign(this.placeholder.style, { color: '#888', fontStyle: 'italic' });
     this.body.appendChild(this.placeholder);
 
     document.body.appendChild(this.container);
@@ -83,84 +91,86 @@ export class ROIPanel {
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.marginBottom = '10px';
-    if (this.sections.size > 0) {
-      const divider = document.createElement('hr');
-      divider.style.border = 'none';
-      divider.style.borderTop = '1px solid #444';
-      divider.style.margin = '8px 0';
-      wrapper.appendChild(divider);
-    }
-
-    const header = document.createElement('div');
-    header.textContent = `${data.roi_id} [${data.arm}] ${data.metric}`;
-    header.style.fontWeight = 'bold';
-    header.style.color = '#fff';
-    header.style.marginBottom = '4px';
-    wrapper.appendChild(header);
-
-    const b = data.roi;
-    const bounds = document.createElement('div');
-    bounds.style.fontSize = '11px';
-    bounds.style.color = '#bbb';
-    bounds.style.lineHeight = '1.4';
-    bounds.innerHTML =
-      `X: ${mm(b.x_min)} – ${mm(b.x_max)} mm<br>` +
-      `Y: ${mm(b.y_min)} – ${mm(b.y_max)} mm<br>` +
-      `Z: ${mm(b.z_min)} – ${mm(b.z_max)} mm<br>` +
-      `Resolution: ${mm(data.resolution)} mm`;
-    wrapper.appendChild(bounds);
+    Object.assign(wrapper.style, {
+      marginTop: this.sections.size > 0 ? '6px' : '0',
+      padding: '6px 8px',
+      background: 'rgba(255,255,255,0.03)',
+      border: '1px solid #333',
+      borderRadius: '4px',
+    });
 
     const s = data.stats;
-    const pct = s.total > 0 ? (100 * s.reachable / s.total).toFixed(1) : '0.0';
+    const pct = s.total > 0 ? (100 * s.reachable / s.total).toFixed(0) : '0';
+
+    const headerRow = document.createElement('div');
+    Object.assign(headerRow.style, {
+      display: 'flex', alignItems: 'center', gap: '6px',
+      cursor: 'pointer', userSelect: 'none',
+    });
+    const chevron = document.createElement('span');
+    chevron.textContent = '▾';
+    Object.assign(chevron.style, { color: '#888', fontSize: '10px', width: '10px' });
+    headerRow.appendChild(chevron);
+    const nameEl = document.createElement('span');
+    nameEl.textContent = data.roi_id;
+    Object.assign(nameEl.style, { fontWeight: 'bold', color: '#fff', flex: '1' });
+    headerRow.appendChild(nameEl);
+    const badge = document.createElement('span');
+    badge.textContent = `${pct}%`;
+    Object.assign(badge.style, {
+      fontSize: '10px', color: pct === '100' ? '#5ec962' : '#fde725',
+      background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: '3px',
+    });
+    headerRow.appendChild(badge);
+    wrapper.appendChild(headerRow);
+
+    const body = document.createElement('div');
+    body.style.marginTop = '6px';
+
+    // Compact info grid
+    const b = data.roi;
+    const bounds = document.createElement('div');
+    Object.assign(bounds.style, {
+      fontSize: '10px', color: '#aaa', lineHeight: '1.5',
+      display: 'grid', gridTemplateColumns: '12px 1fr', columnGap: '4px',
+    });
+    bounds.innerHTML = this.boundsHtml(b.x_min, b.x_max, b.y_min, b.y_max, b.z_min, b.z_max, data.resolution);
+    body.appendChild(bounds);
+
     const stats = document.createElement('div');
-    stats.style.fontSize = '11px';
-    stats.style.color = '#bbb';
-    stats.style.marginTop = '4px';
-    stats.style.lineHeight = '1.4';
+    Object.assign(stats.style, {
+      fontSize: '10px', color: '#aaa', marginTop: '4px', lineHeight: '1.4',
+    });
     stats.innerHTML =
-      `Reachable: ${s.reachable}/${s.total} (${pct}%)<br>` +
-      `μ_trans: [${s.mu_trans_min.toFixed(3)}, ${s.mu_trans_max.toFixed(3)}]<br>` +
-      `mean=${s.mu_trans_mean.toFixed(3)}, p50=${s.mu_trans_p50.toFixed(3)}`;
-    wrapper.appendChild(stats);
+      `<span style="color:#ccc">${s.reachable}/${s.total}</span> reach ` +
+      `&nbsp;μ <span style="color:#ccc">[${s.mu_trans_min.toFixed(3)}, ${s.mu_trans_max.toFixed(3)}]</span><br>` +
+      `mean <span style="color:#ccc">${s.mu_trans_mean.toFixed(3)}</span> ` +
+      `p50 <span style="color:#ccc">${s.mu_trans_p50.toFixed(3)}</span>`;
+    body.appendChild(stats);
 
-    // Show checkbox
-    const showRow = document.createElement('label');
-    Object.assign(showRow.style, { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', cursor: 'pointer' });
-    const showCb = document.createElement('input');
-    showCb.type = 'checkbox';
-    showCb.checked = true;
-    showCb.addEventListener('change', () => {
-      if (this.onVisibilityChange) this.onVisibilityChange(data.roi_id, showCb.checked);
+    // Checkboxes row (Show + Unreach)
+    const cbRow = document.createElement('div');
+    Object.assign(cbRow.style, {
+      display: 'flex', gap: '10px', marginTop: '6px', fontSize: '10px',
     });
-    showRow.appendChild(showCb);
-    const showLab = document.createElement('span');
-    showLab.textContent = 'Show';
-    showRow.appendChild(showLab);
-    wrapper.appendChild(showRow);
-
-    // Show unreachable checkbox
-    const unreachRow = document.createElement('label');
-    Object.assign(unreachRow.style, { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', cursor: 'pointer' });
-    const unreachCb = document.createElement('input');
-    unreachCb.type = 'checkbox';
-    unreachCb.checked = false;
-    unreachCb.addEventListener('change', () => {
-      if (this.onShowUnreachableChange) this.onShowUnreachableChange(data.roi_id, unreachCb.checked);
+    const showLabel = this.compactCheckbox('Show', true, (v) => {
+      if (this.onVisibilityChange) this.onVisibilityChange(data.roi_id, v);
     });
-    unreachRow.appendChild(unreachCb);
-    const unreachLab = document.createElement('span');
-    unreachLab.textContent = 'Show Unreachable';
-    unreachRow.appendChild(unreachLab);
-    wrapper.appendChild(unreachRow);
+    const unreachLabel = this.compactCheckbox('Unreach', false, (v) => {
+      if (this.onShowUnreachableChange) this.onShowUnreachableChange(data.roi_id, v);
+    });
+    cbRow.appendChild(showLabel);
+    cbRow.appendChild(unreachLabel);
+    body.appendChild(cbRow);
 
-    // Opacity slider
+    // Opacity row
     const opRow = document.createElement('div');
-    Object.assign(opRow.style, { display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' });
+    Object.assign(opRow.style, {
+      display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', fontSize: '10px',
+    });
     const opLab = document.createElement('span');
-    opLab.textContent = 'Opacity:';
-    opLab.style.fontSize = '11px';
-    opLab.style.width = '60px';
+    opLab.textContent = 'α';
+    Object.assign(opLab.style, { color: '#aaa', width: '10px' });
     opRow.appendChild(opLab);
     const opSlider = document.createElement('input');
     opSlider.type = 'range';
@@ -168,12 +178,10 @@ export class ROIPanel {
     opSlider.max = '1.0';
     opSlider.step = '0.1';
     opSlider.value = '0.6';
-    opSlider.style.flex = '1';
+    Object.assign(opSlider.style, { flex: '1', height: '12px', accentColor: '#5ec962' });
     const opVal = document.createElement('span');
     opVal.textContent = '0.6';
-    opVal.style.fontSize = '11px';
-    opVal.style.width = '28px';
-    opVal.style.textAlign = 'right';
+    Object.assign(opVal.style, { color: '#ccc', width: '22px', textAlign: 'right' });
     opSlider.addEventListener('input', () => {
       const v = parseFloat(opSlider.value);
       opVal.textContent = v.toFixed(1);
@@ -181,62 +189,22 @@ export class ROIPanel {
     });
     opRow.appendChild(opSlider);
     opRow.appendChild(opVal);
-    wrapper.appendChild(opRow);
+    body.appendChild(opRow);
 
-    // Show Best Config button
-    const bestVoxel = data.voxels
-      .filter((v) => v.reachable && v.best_q !== null)
-      .reduce<ROIVoxel | null>((best, v) => {
-        if (!best || v.mu_trans > best.mu_trans) return v;
-        return best;
-      }, null);
-
-    const bestBtn = document.createElement('button');
-    this.styleButton(bestBtn);
-    Object.assign(bestBtn.style, {
-      background: '#4488ff',
-      marginTop: '6px',
-      width: '100%',
-    });
-    if (bestVoxel && bestVoxel.best_q) {
-      bestBtn.textContent = `Show Best Config (mu=${bestVoxel.mu_trans.toFixed(3)})`;
-      bestBtn.addEventListener('click', () => {
-        const currentData = this.roiDataMap.get(data.roi_id);
-        if (!currentData) return;
-        const best = currentData.voxels
-          .filter((v) => v.reachable && v.best_q !== null)
-          .reduce<ROIVoxel | null>((b, v) => {
-            if (!b || v.mu_trans > b.mu_trans) return v;
-            return b;
-          }, null);
-        if (best && best.best_q && this.onShowBestConfig) {
-          this.onShowBestConfig(data.roi_id, best.best_q);
-        }
-      });
-    } else {
-      bestBtn.textContent = 'Show Best Config (N/A)';
-      bestBtn.disabled = true;
-      bestBtn.style.opacity = '0.5';
-      bestBtn.style.cursor = 'not-allowed';
-    }
-    wrapper.appendChild(bestBtn);
-
-    // Colorbar
+    // Colorbar (compact)
     const cbWrap = document.createElement('div');
-    cbWrap.style.marginTop = '6px';
+    cbWrap.style.marginTop = '5px';
     const cbar = document.createElement('div');
     Object.assign(cbar.style, {
-      height: '16px',
-      width: '100%',
-      borderRadius: '3px',
-      border: '1px solid #555',
+      height: '10px', width: '100%',
+      borderRadius: '2px', border: '1px solid #444',
       background: 'linear-gradient(to right, #440154, #3b528b, #21918c, #5ec962, #fde725)',
     });
     cbWrap.appendChild(cbar);
     const cbLabels = document.createElement('div');
     Object.assign(cbLabels.style, {
       display: 'flex', justifyContent: 'space-between',
-      fontSize: '10px', color: '#aaa', marginTop: '2px',
+      fontSize: '9px', color: '#888', marginTop: '1px',
     });
     const lo = document.createElement('span');
     lo.textContent = s.mu_trans_min.toFixed(3);
@@ -245,10 +213,62 @@ export class ROIPanel {
     cbLabels.appendChild(lo);
     cbLabels.appendChild(hi);
     cbWrap.appendChild(cbLabels);
-    wrapper.appendChild(cbWrap);
+    body.appendChild(cbWrap);
+
+    // Best Config button
+    const bestVoxel = data.voxels
+      .filter((v) => v.reachable && v.best_q !== null)
+      .reduce<ROIVoxel | null>((best, v) => {
+        if (!best || v.mu_trans > best.mu_trans) return v;
+        return best;
+      }, null);
+    const bestBtn = document.createElement('button');
+    Object.assign(bestBtn.style, {
+      background: '#3b82e0', color: '#fff', border: 'none',
+      borderRadius: '3px', padding: '5px 8px', cursor: 'pointer',
+      fontFamily: 'monospace', fontSize: '10px',
+      marginTop: '6px', width: '100%',
+    });
+    if (bestVoxel && bestVoxel.best_q) {
+      bestBtn.textContent = `Best Config (μ=${bestVoxel.mu_trans.toFixed(3)})`;
+      bestBtn.addEventListener('click', () => {
+        const cur = this.roiDataMap.get(data.roi_id);
+        if (!cur) return;
+        const best = cur.voxels
+          .filter((v) => v.reachable && v.best_q !== null)
+          .reduce<ROIVoxel | null>((bv, v) => {
+            if (!bv || v.mu_trans > bv.mu_trans) return v;
+            return bv;
+          }, null);
+        if (best && best.best_q && this.onShowBestConfig) {
+          this.onShowBestConfig(data.roi_id, best.best_q);
+        }
+      });
+    } else {
+      bestBtn.textContent = 'Best Config (N/A)';
+      bestBtn.disabled = true;
+      bestBtn.style.opacity = '0.5';
+      bestBtn.style.cursor = 'not-allowed';
+    }
+    body.appendChild(bestBtn);
+
+    wrapper.appendChild(body);
+
+    // Default: first section expanded, rest collapsed
+    const defaultExpanded = this.sections.size === 0;
+    const section: ROISection = {
+      roiId: data.roi_id, wrapper, body,
+      boundsEl: bounds, chevron, expanded: defaultExpanded,
+    };
+    this.applyExpanded(section);
+
+    headerRow.addEventListener('click', () => {
+      section.expanded = !section.expanded;
+      this.applyExpanded(section);
+    });
 
     this.body.appendChild(wrapper);
-    this.sections.set(data.roi_id, { roiId: data.roi_id, wrapper, boundsEl: bounds });
+    this.sections.set(data.roi_id, section);
   }
 
   updateBounds(roiId: string, bounds: { x_min: number; x_max: number; y_min: number; y_max: number; z_min: number; z_max: number }): void {
@@ -256,11 +276,9 @@ export class ROIPanel {
     if (!sec) return;
     const data = this.roiDataMap.get(roiId);
     const res = data ? data.resolution : 0;
-    sec.boundsEl.innerHTML =
-      `X: ${mm(bounds.x_min)} – ${mm(bounds.x_max)} mm<br>` +
-      `Y: ${mm(bounds.y_min)} – ${mm(bounds.y_max)} mm<br>` +
-      `Z: ${mm(bounds.z_min)} – ${mm(bounds.z_max)} mm<br>` +
-      `Resolution: ${mm(res)} mm`;
+    sec.boundsEl.innerHTML = this.boundsHtml(
+      bounds.x_min, bounds.x_max, bounds.y_min, bounds.y_max, bounds.z_min, bounds.z_max, res,
+    );
   }
 
   removeROI(roiId: string): void {
@@ -274,12 +292,40 @@ export class ROIPanel {
     }
   }
 
-  private styleButton(btn: HTMLButtonElement): void {
-    Object.assign(btn.style, {
-      background: '#444', color: '#e0e0e0', border: '1px solid #666',
-      borderRadius: '3px', padding: '6px 10px', cursor: 'pointer',
-      fontFamily: 'monospace', fontSize: '12px',
+  private applyExpanded(section: ROISection): void {
+    section.body.style.display = section.expanded ? 'block' : 'none';
+    section.chevron.textContent = section.expanded ? '▾' : '▸';
+  }
+
+  private boundsHtml(
+    xMin: number, xMax: number, yMin: number, yMax: number, zMin: number, zMax: number, res: number,
+  ): string {
+    const g = (k: string, a: number, b: number) =>
+      `<span style="color:#888">${k}</span><span style="color:#ccc">${mm(a)} – ${mm(b)}</span>`;
+    return (
+      g('X', xMin, xMax) +
+      g('Y', yMin, yMax) +
+      g('Z', zMin, zMax) +
+      `<span style="color:#888">r</span><span style="color:#ccc">${mm(res)} mm</span>`
+    );
+  }
+
+  private compactCheckbox(label: string, checked: boolean, onChange: (v: boolean) => void): HTMLLabelElement {
+    const wrap = document.createElement('label');
+    Object.assign(wrap.style, {
+      display: 'flex', alignItems: 'center', gap: '4px',
+      cursor: 'pointer', color: '#ccc',
     });
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked;
+    Object.assign(cb.style, { margin: '0', accentColor: '#5ec962' });
+    cb.addEventListener('change', () => onChange(cb.checked));
+    wrap.appendChild(cb);
+    const txt = document.createElement('span');
+    txt.textContent = label;
+    wrap.appendChild(txt);
+    return wrap;
   }
 }
 
