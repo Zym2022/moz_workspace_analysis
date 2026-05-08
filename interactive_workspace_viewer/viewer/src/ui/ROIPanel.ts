@@ -17,7 +17,6 @@ export class ROIPanel {
   private statusLine: HTMLDivElement;
   private body: HTMLDivElement;
   private placeholder: HTMLDivElement;
-  private computeBtn: HTMLButtonElement;
   private sections: Map<string, ROISection> = new Map();
   private roiDataMap: Map<string, ROIData> = new Map();
 
@@ -64,26 +63,6 @@ export class ROIPanel {
     this.placeholder.style.fontStyle = 'italic';
     this.placeholder.style.marginBottom = '8px';
     this.body.appendChild(this.placeholder);
-
-    this.computeBtn = document.createElement('button');
-    this.styleButton(this.computeBtn);
-    this.computeBtn.textContent = 'Compute Custom ROI';
-    this.computeBtn.style.marginTop = '8px';
-    this.computeBtn.style.width = '100%';
-    this.computeBtn.addEventListener('click', () => {
-      if (!this.onCompute) return;
-      const req: ROIRequest = {
-        roi_id: 'case1_left_front',
-        arm: 'left',
-        roi: { x_min: 0, x_max: 0.2, y_min: -0.5, y_max: -0.3, z_min: 1.5, z_max: 1.7 },
-        resolution: 0.05,
-        ee_orientation: [[1, 0, 0], [0, 0, 1], [0, -1, 0]],
-        waist_angles: [0, 0, 0],
-        n_ik_attempts: 20,
-      };
-      this.onCompute(req);
-    });
-    this.container.appendChild(this.computeBtn);
 
     document.body.appendChild(this.container);
   }

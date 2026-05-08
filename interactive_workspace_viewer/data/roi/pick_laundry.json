@@ -1,6 +1,6 @@
 {
   "schema": "moz2_roi_manipulability_v1",
-  "roi_id": "case1_left_front",
+  "roi_id": "pick_laundry",
   "arm": "left",
   "frame": "base_link",
   "roi": {
@@ -1518,5 +1518,5 @@
     "mu_trans_mean": 0.10856811065849736,
     "mu_trans_p50": 0.10886916535543428
   },
-  "generated_at": "2026-05-07T10:19:00.621378Z"
+  "generated_at": "2026-05-08T03:34:51.119442Z"
 }

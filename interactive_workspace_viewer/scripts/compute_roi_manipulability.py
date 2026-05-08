@@ -190,7 +190,8 @@ def solve_ik(kin: URDFKinematics, target_pos: np.ndarray, target_rot: np.ndarray
 def compute_roi_manipulability(urdf_path: str, roi_bounds: Dict[str, float],
                                 resolution: float, ee_orientation: np.ndarray,
                                 waist_angles: List[float] = [0, 0, 0],
-                                arm: str = 'left', n_ik_attempts: int = 20) -> Dict:
+                                arm: str = 'left', n_ik_attempts: int = 20,
+                                roi_id: str = 'roi_default') -> Dict:
     """Compute mu_trans for each voxel center in the ROI."""
     kin = URDFKinematics(urdf_path, arm)
 
@@ -282,7 +283,7 @@ def compute_roi_manipulability(urdf_path: str, roi_bounds: Dict[str, float],
 
     result = {
         'schema': 'moz2_roi_manipulability_v1',
-        'roi_id': 'case1_left_front',
+        'roi_id': roi_id,
         'arm': arm,
         'frame': 'base_link',
         'roi': roi_bounds,
@@ -320,43 +321,71 @@ def compute_roi_manipulability(urdf_path: str, roi_bounds: Dict[str, float],
     return result
 
 
+CASE_CONFIGS = {
+    'case1': {
+        'roi_id': 'pick_laundry',
+        'roi_bounds': {'x_min': 0.0, 'x_max': 0.2,
+                       'y_min': -0.5, 'y_max': -0.3,
+                       'z_min': 1.5, 'z_max': 1.7},
+        'resolution': 0.05,
+        'ee_orientation': [[1, 0, 0], [0, 0, 1], [0, -1, 0]],
+        'waist_angles': [0.0, 0.0, 0.0],
+        'arm': 'left',
+        'n_ik_attempts': 20,
+        'label': 'pick laundry',
+    },
+    'case2': {
+        'roi_id': 'tidy_desk',
+        'roi_bounds': {'x_min': 0.0, 'x_max': 0.5,
+                       'y_min': -0.75, 'y_max': -0.25,
+                       'z_min': 1.0, 'z_max': 1.2},
+        'resolution': 0.05,
+        'ee_orientation': [[1, 0, 0], [0, 0, 1], [0, -1, 0]],
+        'waist_angles': [0.0, 0.0, 0.0],
+        'arm': 'left',
+        'n_ik_attempts': 20,
+        'label': 'tidy desk',
+    },
+}
+
+
 def main():
-    """CLI entry: compute case1 and write JSON."""
+    """CLI entry: compute selected case and write JSON."""
+    import argparse
+    parser = argparse.ArgumentParser(description='Compute ROI manipulability.')
+    parser.add_argument('--case', default='case1', choices=list(CASE_CONFIGS.keys()),
+                        help='Preset case to compute (default: case1).')
+    args = parser.parse_args()
+
+    cfg = CASE_CONFIGS[args.case]
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.abspath(os.path.join(script_dir, '../..'))
     urdf_path = os.path.join(repo_root, 'moz2_simplified.urdf')
 
     output_dir = os.path.join(script_dir, '..', 'data', 'roi')
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, 'case1_left_front.json')
+    output_path = os.path.join(output_dir, f"{cfg['roi_id']}.json")
 
-    roi_bounds = {
-        'x_min': 0.0, 'x_max': 0.2,
-        'y_min': -0.5, 'y_max': -0.3,
-        'z_min': 1.5, 'z_max': 1.7,
-    }
-    resolution = 0.05
-    ee_orientation = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=float)
-    waist_angles = [0.0, 0.0, 0.0]
-    arm = 'left'
-    n_ik_attempts = 20
+    ee_orientation = np.array(cfg['ee_orientation'], dtype=float)
 
-    print("=== ROI Manipulability Analysis (Case 1: left front) ===")
+    print(f"=== ROI Manipulability Analysis ({args.case}: {cfg['label']}) ===")
     print(f"URDF: {urdf_path}")
-    print(f"ROI (base_link): {roi_bounds}")
-    print(f"Resolution: {resolution} m")
-    print(f"Arm: {arm}")
-    print(f"IK attempts per voxel: {n_ik_attempts}")
+    print(f"ROI (base_link): {cfg['roi_bounds']}")
+    print(f"Resolution: {cfg['resolution']} m")
+    print(f"Arm: {cfg['arm']}")
+    print(f"IK attempts per voxel: {cfg['n_ik_attempts']}")
     print()
 
     result = compute_roi_manipulability(
         urdf_path=urdf_path,
-        roi_bounds=roi_bounds,
-        resolution=resolution,
+        roi_bounds=cfg['roi_bounds'],
+        resolution=cfg['resolution'],
         ee_orientation=ee_orientation,
-        waist_angles=waist_angles,
-        arm=arm,
-        n_ik_attempts=n_ik_attempts,
+        waist_angles=cfg['waist_angles'],
+        arm=cfg['arm'],
+        n_ik_attempts=cfg['n_ik_attempts'],
+        roi_id=cfg['roi_id'],
     )
 
     with open(output_path, 'w') as f:

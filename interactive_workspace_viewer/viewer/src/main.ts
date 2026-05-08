@@ -392,13 +392,15 @@ async function main() {
     }
   };
 
-  // Auto-load case1
-  loadStaticROI('case1_left_front').then((data) => {
-    if (data) {
-      roiGrid.addROI(data);
-      roiPanel.addROI(data);
-    }
-  });
+  // Auto-load pick_laundry + tidy_desk
+  for (const id of ['pick_laundry', 'tidy_desk']) {
+    loadStaticROI(id).then((data) => {
+      if (data) {
+        roiGrid.addROI(data);
+        roiPanel.addROI(data);
+      }
+    });
+  }
 
   // 14. Start render loop
   sceneManager.start();

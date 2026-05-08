@@ -194,8 +194,8 @@ class HullRequestHandler(SimpleHTTPRequestHandler):
                 waist_angles=waist_angles,
                 arm=arm,
                 n_ik_attempts=n_ik_attempts,
+                roi_id=roi_id,
             )
-            result['roi_id'] = roi_id
 
             output_dir = DATA_DIR / "roi"
             output_dir.mkdir(parents=True, exist_ok=True)
@@ -249,8 +249,8 @@ class HullRequestHandler(SimpleHTTPRequestHandler):
                 waist_angles=waist_angles,
                 arm=arm,
                 n_ik_attempts=n_ik_attempts,
+                roi_id=roi_id,
             )
-            result['roi_id'] = roi_id
 
             output_dir = DATA_DIR / "roi"
             output_dir.mkdir(parents=True, exist_ok=True)

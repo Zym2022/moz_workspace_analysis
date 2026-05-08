@@ -1,12 +1,20 @@
 import * as THREE from 'three';
 import type { ROIData, FrameTransform } from '../kinematics/types.ts';
 
+interface CornerLabel {
+  sprite: THREE.Sprite;
+  canvas: HTMLCanvasElement;
+  texture: THREE.CanvasTexture;
+  localPos: [number, number, number];
+}
+
 interface RenderedROI {
   data: ROIData;
   group: THREE.Group;
   reachableMesh: THREE.InstancedMesh | null;
   unreachableGroup: THREE.Group;
   bboxLines: THREE.LineSegments;
+  cornerLabels: CornerLabel[];
   showUnreachable: boolean;
 }
 
@@ -57,6 +65,10 @@ export class ROIVoxelGrid {
 
     this.group.matrixAutoUpdate = false;
     this.group.matrix.copy(delta);
+
+    for (const roiId of this.rois.keys()) {
+      this.refreshCornerLabels(roiId);
+    }
   }
 
   getROIIds(): string[] {
@@ -175,6 +187,33 @@ export class ROIVoxelGrid {
     bboxLines.name = `roi_bbox_${data.roi_id}`;
     roiGroup.add(bboxLines);
 
+    // 8 corner labels (world-space coord shown, updated on waist change)
+    const cornerPositions: [number, number, number][] = [
+      [data.roi.x_min, data.roi.y_min, data.roi.z_min],
+      [data.roi.x_max, data.roi.y_min, data.roi.z_min],
+      [data.roi.x_min, data.roi.y_max, data.roi.z_min],
+      [data.roi.x_max, data.roi.y_max, data.roi.z_min],
+      [data.roi.x_min, data.roi.y_min, data.roi.z_max],
+      [data.roi.x_max, data.roi.y_min, data.roi.z_max],
+      [data.roi.x_min, data.roi.y_max, data.roi.z_max],
+      [data.roi.x_max, data.roi.y_max, data.roi.z_max],
+    ];
+    const cornerLabels: CornerLabel[] = [];
+    for (const cp of cornerPositions) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 64;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const mat = new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.set(cp[0], cp[1], cp[2]);
+      sprite.scale.set(0.16, 0.04, 1);
+      sprite.renderOrder = 999;
+      roiGroup.add(sprite);
+      cornerLabels.push({ sprite, canvas, texture, localPos: cp });
+    }
+
     this.group.add(roiGroup);
 
     this.rois.set(data.roi_id, {
@@ -183,8 +222,39 @@ export class ROIVoxelGrid {
       reachableMesh,
       unreachableGroup,
       bboxLines,
+      cornerLabels,
       showUnreachable: false,
     });
+
+    // Initial label render (identity transform → world = local)
+    this.refreshCornerLabels(data.roi_id);
+  }
+
+  private refreshCornerLabels(roiId: string): void {
+    const r = this.rois.get(roiId);
+    if (!r) return;
+    const m = this.group.matrix;
+    const v = new THREE.Vector3();
+    for (const cl of r.cornerLabels) {
+      v.set(cl.localPos[0], cl.localPos[1], cl.localPos[2]).applyMatrix4(m);
+      const xmm = Math.round(v.x * 1000);
+      const ymm = Math.round(v.y * 1000);
+      const zmm = Math.round(v.z * 1000);
+      const ctx = cl.canvas.getContext('2d');
+      if (!ctx) continue;
+      ctx.clearRect(0, 0, cl.canvas.width, cl.canvas.height);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(0, 0, cl.canvas.width, cl.canvas.height);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, cl.canvas.width - 2, cl.canvas.height - 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`(${xmm}, ${ymm}, ${zmm})`, cl.canvas.width / 2, cl.canvas.height / 2);
+      cl.texture.needsUpdate = true;
+    }
   }
 
   removeROI(roiId: string): void {
@@ -207,6 +277,10 @@ export class ROIVoxelGrid {
     }
     r.bboxLines.geometry.dispose();
     (r.bboxLines.material as THREE.Material).dispose();
+    for (const cl of r.cornerLabels) {
+      cl.texture.dispose();
+      (cl.sprite.material as THREE.SpriteMaterial).dispose();
+    }
     this.rois.delete(roiId);
   }
 
