@@ -21,7 +21,6 @@ type GridPlane = {
 
 export class ProjectionGrid {
   public group: THREE.Group;
-  private mode: ProjectionPlaneMode = 'all';
   private xy: GridPlane;
   private xz: GridPlane;
   private yz: GridPlane;
@@ -36,7 +35,6 @@ export class ProjectionGrid {
   }
 
   setMode(mode: ProjectionPlaneMode): void {
-    this.mode = mode;
     this.xy.group.visible = mode === 'xy' || mode === 'all';
     this.xz.group.visible = mode === 'xz' || mode === 'all';
     this.yz.group.visible = mode === 'yz' || mode === 'all';

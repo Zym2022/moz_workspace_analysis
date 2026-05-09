@@ -21,10 +21,23 @@ import { ParametricPanel } from './ui/ParametricPanel.ts';
 import { ROIVoxelGrid } from './scene/ROIVoxelGrid.ts';
 import { ROIPanel } from './ui/ROIPanel.ts';
 import { loadStaticROI, computeROI } from './loaders/ROILoader.ts';
-import type { JointState, ParametricParams, SkeletonData } from './kinematics/types.ts';
+import type { JointState, ParametricParams, SkeletonData, HullData } from './kinematics/types.ts';
 
 const COLOR_LEFT = 0x4488ff;
 const COLOR_RIGHT = 0x44bb44;
+
+function withCacheBust(url: string, token: string): string {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(token)}`;
+}
+
+async function fetchFreshJson<T>(url: string, token: string): Promise<T> {
+  const resp = await fetch(withCacheBust(url, token), { cache: 'no-store' });
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch ${url}: ${resp.status} ${resp.statusText}`);
+  }
+  return resp.json() as Promise<T>;
+}
 
 async function main() {
   const container = document.getElementById('app');
@@ -272,8 +285,8 @@ async function main() {
 
       const previewResult = await previewResp.json();
       const [previewLeft, previewRight] = await Promise.all([
-        fetch(previewResult.left_hull_url).then((r: Response) => r.json()),
-        fetch(previewResult.right_hull_url).then((r: Response) => r.json()),
+        fetchFreshJson<HullData>(previewResult.left_hull_url, `${requestId}-preview-left`),
+        fetchFreshJson<HullData>(previewResult.right_hull_url, `${requestId}-preview-right`),
       ]);
       if (requestId !== currentRequestId) return;
 
@@ -305,8 +318,8 @@ async function main() {
           if (!finalResp.ok) return;
           const finalResult = await finalResp.json();
           const [finalLeft, finalRight] = await Promise.all([
-            fetch(finalResult.left_hull_url).then((r: Response) => r.json()),
-            fetch(finalResult.right_hull_url).then((r: Response) => r.json()),
+            fetchFreshJson<HullData>(finalResult.left_hull_url, `${requestId}-final-left`),
+            fetchFreshJson<HullData>(finalResult.right_hull_url, `${requestId}-final-right`),
           ]);
           if (requestId !== currentRequestId) return;
           leftMesh?.replaceHull(finalLeft);

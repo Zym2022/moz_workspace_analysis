@@ -28,6 +28,21 @@ import numpy as np
 from datetime import datetime, timezone
 
 
+def _is_current_hull_cache(hull_path: Path) -> bool:
+    """Return True only for cache files in viewer's current waist01 frame."""
+    try:
+        with open(hull_path) as f:
+            hull = json.load(f)
+    except Exception:
+        return False
+
+    return (
+        hull.get("schema") == "moz2_arm_hull_v1"
+        and hull.get("frame") == "waist01"
+        and "ee_zero_pose_in_waist01" in hull
+    )
+
+
 class HullRequestHandler(SimpleHTTPRequestHandler):
     """Handle /recompute POST and serve static parametric files."""
 
@@ -92,21 +107,28 @@ class HullRequestHandler(SimpleHTTPRequestHandler):
                     cached_config = json.load(f)
                 cached_m = cached_config.get("sobol_m", 0)
                 if cached_m >= sobol_m:
-                    # Use highest available version
-                    best_left = f"left_arm_hull_2p{cached_m}.json"
-                    best_right = f"right_arm_hull_2p{cached_m}.json"
-                    if (output_dir / best_left).exists():
+                    # Use highest available version only if cache format matches current viewer frame.
+                    best_left = output_dir / f"left_arm_hull_2p{cached_m}.json"
+                    best_right = output_dir / f"right_arm_hull_2p{cached_m}.json"
+                    if (
+                        best_left.exists()
+                        and best_right.exists()
+                        and _is_current_hull_cache(best_left)
+                        and _is_current_hull_cache(best_right)
+                    ):
                         print(f"  Cache hit! (cached 2^{cached_m} >= requested 2^{sobol_m})")
                         response = {
                             "status": "ok",
                             "hash": hash_str,
-                            "left_hull_url": f"/parametric/variants/{hash_str}/{best_left}",
-                            "right_hull_url": f"/parametric/variants/{hash_str}/{best_right}",
+                            "left_hull_url": f"/parametric/variants/{hash_str}/{best_left.name}",
+                            "right_hull_url": f"/parametric/variants/{hash_str}/{best_right.name}",
                             "sobol_m": cached_m,
                             "cached": True,
                         }
                         self._send_json_response(response)
                         return
+                    else:
+                        print("  Cache stale/incompatible. Recomputing current waist01-format hulls...")
 
             # Recompute: only left arm, then mirror for right
             print(f"  Cache miss. Computing left arm + mirror...")
