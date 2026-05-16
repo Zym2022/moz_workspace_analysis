@@ -401,8 +401,8 @@ async function main() {
     }
   };
 
-  // Auto-load pick_laundry + tidy_desk + make_bed
-  for (const id of ['pick_laundry', 'tidy_desk', 'make_bed']) {
+  // Auto-load pick_laundry + tidy_desk + make_bed + chest_front
+  for (const id of ['pick_laundry', 'tidy_desk', 'make_bed', 'chest_front']) {
     loadStaticROI(id).then((data) => {
       if (data) {
         roiGrid.addROI(data);
