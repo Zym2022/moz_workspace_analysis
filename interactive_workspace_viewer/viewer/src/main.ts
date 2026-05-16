@@ -406,8 +406,8 @@ async function main() {
     }
   };
 
-  // Auto-load chest_front_down only (case5; case4 overlaps, hidden by default)
-  for (const id of ['chest_front_down']) {
+  // Auto-load chest_front (case4) + chest_front_down (case5)
+  for (const id of ['chest_front', 'chest_front_down']) {
     loadStaticROI(id).then((data) => {
       if (data) {
         roiGrid.addROI(data);
