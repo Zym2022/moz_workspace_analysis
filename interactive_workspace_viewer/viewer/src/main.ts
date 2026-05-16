@@ -95,18 +95,23 @@ async function main() {
   let rightProjection: HullProjectionDimensions | null = null;
   if (leftHull) {
     leftMesh = new HullMesh(leftHull);
+    leftMesh.setVisible(false);
     sceneManager.scene.add(leftMesh.group);
     leftProjection = new HullProjectionDimensions(leftMesh, COLOR_LEFT);
+    leftProjection.group.visible = false;
     sceneManager.scene.add(leftProjection.group);
   }
   if (rightHull) {
     rightMesh = new HullMesh(rightHull);
+    rightMesh.setVisible(false);
     sceneManager.scene.add(rightMesh.group);
     rightProjection = new HullProjectionDimensions(rightMesh, COLOR_RIGHT, true);
+    rightProjection.group.visible = false;
     sceneManager.scene.add(rightProjection.group);
   }
 
   const projectionGrid = new ProjectionGrid();
+  projectionGrid.group.visible = false;
   sceneManager.scene.add(projectionGrid.group);
 
   // 8. Status panel
@@ -401,8 +406,8 @@ async function main() {
     }
   };
 
-  // Auto-load pick_laundry + tidy_desk + make_bed + chest_front
-  for (const id of ['pick_laundry', 'tidy_desk', 'make_bed', 'chest_front']) {
+  // Auto-load chest_front only (other ROIs stale due to URDF change)
+  for (const id of ['chest_front']) {
     loadStaticROI(id).then((data) => {
       if (data) {
         roiGrid.addROI(data);

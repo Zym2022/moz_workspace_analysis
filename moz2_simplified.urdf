@@ -198,11 +198,11 @@
     </visual>
   </link>
   <joint name="LeftArm-3" type="revolute">
-    <origin xyz="0 -0.025 -0.208" rpy="0 0 0" />
+    <origin xyz="0 -0.015 -0.208" rpy="0 0 0" />
     <parent link="left03" />
     <child link="left04" />
     <axis xyz="1 0 0" />
-    <limit lower="-2.7911111" upper="0.174532925" effort="100" velocity="1.0" />
+    <limit lower="-2.617993878" upper="0.174532925" effort="100" velocity="1.0" />
   </joint>
   <link name="left05">
     <inertial>
@@ -248,7 +248,7 @@
     <parent link="left05" />
     <child link="left06" />
     <axis xyz="0 1 0" />
-    <limit lower="-1.658062789" upper="1.658062789" effort="100" velocity="1.0" />
+    <limit lower="-1.570796327" upper="1.570796327" effort="100" velocity="1.0" />
   </joint>
   <link name="left07">
     <inertial>
@@ -271,7 +271,7 @@
     <parent link="left06" />
     <child link="left07" />
     <axis xyz="1 0 0" />
-    <limit lower="-1.570796327" upper="1.570796327" effort="100" velocity="1.0" />
+    <limit lower="-1.483529864" upper="1.396263402" effort="100" velocity="1.0" />
   </joint>
   <link name="left_ee_site">
     <visual>
@@ -375,11 +375,11 @@
     </visual>
   </link>
   <joint name="RightArm-3" type="revolute">
-    <origin xyz="0 0.025 -0.208" rpy="0 0 0" />
+    <origin xyz="0 0.015 -0.208" rpy="0 0 0" />
     <parent link="right03" />
     <child link="right04" />
     <axis xyz="1 0 0" />
-    <limit lower="-0.174532925" upper="2.7911111" effort="100" velocity="1.0" />
+    <limit lower="-0.174532925" upper="2.617993878" effort="100" velocity="1.0" />
   </joint>
   <link name="right05">
     <inertial>
@@ -425,7 +425,7 @@
     <parent link="right05" />
     <child link="right06" />
     <axis xyz="0 1 0" />
-    <limit lower="-1.658062789" upper="1.658062789" effort="100" velocity="1.0" />
+    <limit lower="-1.570796327" upper="1.570796327" effort="100" velocity="1.0" />
   </joint>
   <link name="right07">
     <inertial>
@@ -448,7 +448,7 @@
     <parent link="right06" />
     <child link="right07" />
     <axis xyz="1 0 0" />
-    <limit lower="-1.570796327" upper="1.570796327" effort="100" velocity="1.0" />
+    <limit lower="-1.396263402" upper="1.483529864" effort="100" velocity="1.0" />
   </joint>
   <link name="right_ee_site">
     <visual>

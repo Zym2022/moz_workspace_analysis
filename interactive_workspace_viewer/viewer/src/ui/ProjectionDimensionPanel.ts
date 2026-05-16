@@ -5,8 +5,8 @@ export class ProjectionDimensionPanel {
   public onHullVisibilityChange: ((visible: boolean) => void) | null = null;
 
   private container: HTMLDivElement;
-  private mode: ProjectionPlaneMode = 'all';
-  private hullVisible: boolean = true;
+  private mode: ProjectionPlaneMode = 'off';
+  private hullVisible: boolean = false;
   private buttons: Map<ProjectionPlaneMode, HTMLButtonElement> = new Map();
   private hullToggle: HTMLButtonElement | null = null;
   private content: HTMLPreElement;
@@ -69,7 +69,7 @@ export class ProjectionDimensionPanel {
     hullRow.style.marginBottom = '8px';
     this.hullToggle = document.createElement('button');
     this.styleButton(this.hullToggle);
-    this.hullToggle.textContent = 'Hide Hulls';
+    this.hullToggle.textContent = 'Show Hulls';
     this.hullToggle.addEventListener('click', () => {
       this.hullVisible = !this.hullVisible;
       this.hullToggle!.textContent = this.hullVisible ? 'Hide Hulls' : 'Show Hulls';

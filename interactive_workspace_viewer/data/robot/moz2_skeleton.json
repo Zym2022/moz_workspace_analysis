@@ -1,7 +1,7 @@
 {
   "schema": "moz2_skeleton_v1",
   "source_urdf": "moz2_simplified.urdf",
-  "generated_at": "2026-04-29T06:40:44.101000+00:00",
+  "generated_at": "2026-05-16T01:38:17.911540+00:00",
   "root": "base_link",
   "joints": [
     {
@@ -149,7 +149,7 @@
       "child": "left04",
       "origin_xyz": [
         0.0,
-        -0.025,
+        -0.015,
         -0.208
       ],
       "origin_rpy": [
@@ -162,7 +162,7 @@
         0.0,
         0.0
       ],
-      "limit_lower": -2.7911111,
+      "limit_lower": -2.617993878,
       "limit_upper": 0.174532925
     },
     {
@@ -208,8 +208,8 @@
         1.0,
         0.0
       ],
-      "limit_lower": -1.658062789,
-      "limit_upper": 1.658062789
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
     },
     {
       "name": "LeftArm-6",
@@ -231,8 +231,8 @@
         0.0,
         0.0
       ],
-      "limit_lower": -1.570796327,
-      "limit_upper": 1.570796327
+      "limit_lower": -1.483529864,
+      "limit_upper": 1.396263402
     },
     {
       "name": "left_ee_site_fixed",
@@ -329,7 +329,7 @@
       "child": "right04",
       "origin_xyz": [
         0.0,
-        0.025,
+        0.015,
         -0.208
       ],
       "origin_rpy": [
@@ -343,7 +343,7 @@
         0.0
       ],
       "limit_lower": -0.174532925,
-      "limit_upper": 2.7911111
+      "limit_upper": 2.617993878
     },
     {
       "name": "RightArm-4",
@@ -388,8 +388,8 @@
         1.0,
         0.0
       ],
-      "limit_lower": -1.658062789,
-      "limit_upper": 1.658062789
+      "limit_lower": -1.570796327,
+      "limit_upper": 1.570796327
     },
     {
       "name": "RightArm-6",
@@ -411,8 +411,8 @@
         0.0,
         0.0
       ],
-      "limit_lower": -1.570796327,
-      "limit_upper": 1.570796327
+      "limit_lower": -1.396263402,
+      "limit_upper": 1.483529864
     },
     {
       "name": "right_ee_site_fixed",
@@ -856,7 +856,7 @@
     "left04": {
       "position": [
         0.22,
-        0.1325,
+        0.1425,
         1.04
       ],
       "rotation_matrix": [
@@ -880,7 +880,7 @@
     "right04": {
       "position": [
         -0.22,
-        0.1325,
+        0.1425,
         1.04
       ],
       "rotation_matrix": [
@@ -904,7 +904,7 @@
     "left05": {
       "position": [
         0.22,
-        0.1325,
+        0.1425,
         0.91
       ],
       "rotation_matrix": [
@@ -928,7 +928,7 @@
     "right05": {
       "position": [
         -0.22,
-        0.1325,
+        0.1425,
         0.91
       ],
       "rotation_matrix": [
@@ -952,7 +952,7 @@
     "left06": {
       "position": [
         0.22,
-        0.1325,
+        0.1425,
         0.706
       ],
       "rotation_matrix": [
@@ -976,7 +976,7 @@
     "right06": {
       "position": [
         -0.22,
-        0.1325,
+        0.1425,
         0.706
       ],
       "rotation_matrix": [
@@ -1000,7 +1000,7 @@
     "left07": {
       "position": [
         0.22,
-        0.1325,
+        0.1425,
         0.656
       ],
       "rotation_matrix": [
@@ -1024,7 +1024,7 @@
     "right07": {
       "position": [
         -0.22,
-        0.1325,
+        0.1425,
         0.656
       ],
       "rotation_matrix": [
@@ -1048,7 +1048,7 @@
     "left_ee_site": {
       "position": [
         0.212,
-        0.1325,
+        0.1425,
         0.556
       ],
       "rotation_matrix": [
@@ -1072,7 +1072,7 @@
     "right_ee_site": {
       "position": [
         -0.212,
-        0.1325,
+        0.1425,
         0.556
       ],
       "rotation_matrix": [

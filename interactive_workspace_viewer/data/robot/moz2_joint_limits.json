@@ -1,7 +1,7 @@
 {
   "schema": "moz2_joint_limits_v1",
   "source_urdf": "moz2_simplified.urdf",
-  "generated_at": "2026-04-29T06:40:44.101000+00:00",
+  "generated_at": "2026-05-16T01:38:17.911540+00:00",
   "joints": {
     "LegWaist-1": {
       "lower": -1.570796327,
@@ -40,9 +40,9 @@
       "analysis_upper": 3.054326191
     },
     "LeftArm-3": {
-      "lower": -2.7911111,
+      "lower": -2.617993878,
       "upper": 0.174532925,
-      "analysis_lower": -2.7911111,
+      "analysis_lower": -2.617993878,
       "analysis_upper": 0.174532925
     },
     "LeftArm-4": {
@@ -52,16 +52,16 @@
       "analysis_upper": 3.054326191
     },
     "LeftArm-5": {
-      "lower": -1.658062789,
-      "upper": 1.658062789,
-      "analysis_lower": -1.658062789,
-      "analysis_upper": 1.658062789
-    },
-    "LeftArm-6": {
       "lower": -1.570796327,
       "upper": 1.570796327,
       "analysis_lower": -1.570796327,
       "analysis_upper": 1.570796327
+    },
+    "LeftArm-6": {
+      "lower": -1.483529864,
+      "upper": 1.396263402,
+      "analysis_lower": -1.483529864,
+      "analysis_upper": 1.396263402
     },
     "RightArm-0": {
       "lower": -2.094395102,
@@ -83,9 +83,9 @@
     },
     "RightArm-3": {
       "lower": -0.174532925,
-      "upper": 2.7911111,
+      "upper": 2.617993878,
       "analysis_lower": -0.174532925,
-      "analysis_upper": 2.7911111
+      "analysis_upper": 2.617993878
     },
     "RightArm-4": {
       "lower": -3.054326191,
@@ -94,16 +94,16 @@
       "analysis_upper": 3.054326191
     },
     "RightArm-5": {
-      "lower": -1.658062789,
-      "upper": 1.658062789,
-      "analysis_lower": -1.658062789,
-      "analysis_upper": 1.658062789
-    },
-    "RightArm-6": {
       "lower": -1.570796327,
       "upper": 1.570796327,
       "analysis_lower": -1.570796327,
       "analysis_upper": 1.570796327
+    },
+    "RightArm-6": {
+      "lower": -1.396263402,
+      "upper": 1.483529864,
+      "analysis_lower": -1.396263402,
+      "analysis_upper": 1.483529864
     },
     "Head-0": {
       "lower": -1.570796327,
