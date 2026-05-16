@@ -361,8 +361,8 @@ CASE_CONFIGS = {
     'case4': {
         'roi_id': 'chest_front',
         'roi_bounds': {'x_min': 0.0, 'x_max': 0.3,
-                       'y_min': -0.1425, 'y_max': 0.0575,
-                       'z_min': 1.0, 'z_max': 1.2},
+                       'y_min': -0.142, 'y_max': 0.053,
+                       'z_min': 1.0, 'z_max': 1.5},
         'resolution': 0.05,
         'ee_orientation': [[0, 0, 1], [-1, 0, 0], [0, -1, 0]],
         'waist_angles': [0.0, 0.0, 0.0],
