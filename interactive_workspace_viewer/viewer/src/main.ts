@@ -425,8 +425,8 @@ function verifyZeroPoseFK(fk: ForwardKinematics) {
   const result = fk.compute({});
   const checks: [string, [number, number, number], number][] = [
     ['waist01', [0.0, 0.1575, 1.041], 1e-5],
-    ['left_ee_site', [0.212, 0.1325, 0.556], 1e-4],
-    ['right_ee_site', [-0.212, 0.1325, 0.556], 1e-4],
+    ['left_ee_site', [0.212, 0.1425, 0.556], 1e-4],
+    ['right_ee_site', [-0.212, 0.1425, 0.556], 1e-4],
   ];
   for (const [name, expected, tol] of checks) {
     const t = result.linkTransforms[name];

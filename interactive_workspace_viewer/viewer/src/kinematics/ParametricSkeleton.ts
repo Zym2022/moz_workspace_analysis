@@ -1,8 +1,9 @@
 import type { SkeletonData, ParametricParams } from './types.ts';
 
+// Current MOZ2 baseline (matches moz2_simplified.urdf).
 export const DEFAULT_PARAMS: ParametricParams = {
   arm_upper_z_total: 0.334,
-  arm_elbow_y_offset: 0.025,
+  arm_elbow_y_offset: 0.015,
   arm_forearm_z_total: 0.334,
   arm_wrist_z: 0.050,
   arm_shoulder_x_total: 0.220,

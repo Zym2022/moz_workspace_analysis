@@ -42,7 +42,7 @@ def modify_kinematics(kin, arm_side, arm_upper_z, arm_elbow_y, arm_forearm_z, ar
         kin: URDFKinematics instance
         arm_side: 'left' or 'right'
         arm_upper_z: total upper arm z length (default 0.334)
-        arm_elbow_y: elbow y offset (default 0.025)
+        arm_elbow_y: elbow y offset (default 0.015)
         arm_forearm_z: total forearm z length (default 0.334)
         arm_wrist_z: wrist z length (default 0.050)
     """
@@ -198,8 +198,8 @@ def main():
     parser = argparse.ArgumentParser(description="Recompute arm hulls with parametric geometry")
     parser.add_argument("--arm-upper-z", type=float, default=0.334,
                         help="Total upper arm z length (default: 0.334)")
-    parser.add_argument("--arm-elbow-y", type=float, default=0.025,
-                        help="Elbow y offset (default: 0.025)")
+    parser.add_argument("--arm-elbow-y", type=float, default=0.015,
+                        help="Elbow y offset (default: 0.015)")
     parser.add_argument("--arm-forearm-z", type=float, default=0.334,
                         help="Total forearm z length (default: 0.334)")
     parser.add_argument("--arm-wrist-z", type=float, default=0.050,

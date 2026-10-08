@@ -24,8 +24,8 @@ RIGHT_HULL_PATH = VIEWER_ROOT / "data" / "hulls" / "right_arm_hull_waist01.json"
 
 # Reference values
 REF_WAIST01 = [0.0, 0.1575, 1.041]
-REF_LEFT_EE = [0.212, 0.1325, 0.556]
-REF_RIGHT_EE = [-0.212, 0.1325, 0.556]
+REF_LEFT_EE = [0.212, 0.1425, 0.556]
+REF_RIGHT_EE = [-0.212, 0.1425, 0.556]
 
 EXPECTED_JOINTS = [
     "LegWaist-1", "LegWaist-2", "LegWaist-3",
