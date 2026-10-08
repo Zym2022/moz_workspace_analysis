@@ -568,7 +568,7 @@ Phase 3 完成后、进入 Phase 4 的 voxel / 剖切 / 指标层之前，应先
 | 参数 | 默认值 | URDF 映射 | 是否改变 arm hull 形状 |
 |---|---:|---|---|
 | `arm_upper_z_total` | `0.334` | `LeftArm-2.z + LeftArm-3.z`，右臂同步 | 是 |
-| `arm_elbow_y_offset` | `0.025` | `LeftArm-3.y = -offset`，`RightArm-3.y = +offset` | 是 |
+| `arm_elbow_y_offset` | `0.015` | `LeftArm-3.y = -offset`，`RightArm-3.y = +offset` | 是 |
 | `arm_forearm_z_total` | `0.334` | `LeftArm-4.z + LeftArm-5.z`，右臂同步 | 是 |
 | `arm_wrist_z` | `0.050` | `LeftArm-6.z = -value`，右臂同步 | 是 |
 | `arm_shoulder_x_total` | `0.220` | `LeftArm-0.x + LeftArm-1.x`，右臂镜像同步 | 否 |

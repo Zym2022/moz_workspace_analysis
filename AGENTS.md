@@ -4,23 +4,28 @@
 
 This repository centers on humanoid arm workspace analysis for `moz2_simplified.urdf`.
 
-- `workspace_analysis/`: active Python scripts and reports.
-  - `single_arm_workspace.py`: FK/Jacobian core utilities.
-  - `phase0_kinematics_validation.py`: Phase 0 kinematics checks.
-  - `build_manipulability_map.py`: Phase 1 6D map generation.
-  - `compute_icn_ext.py`, `visualize_icn_ext.py`: Phase 2 approximate extended metrics.
-  - `test_icn_ext.py`: unit tests for Phase 2 logic.
-  - `PHASE01_REPORT.md`, `PHASE02_REPORT.md`, `*_PLAN.md`: design and analysis docs.
+- `workspace_analysis/manipulability_analysis/`: active single-arm analysis package.
+  - `src/single_arm_workspace.py`: FK/Jacobian core utilities.
+  - `src/phase0_kinematics_validation.py`: Phase 0 kinematics checks.
+  - `src/build_manipulability_map.py`: Phase 1 6D map generation.
+  - `src/compute_icn_ext.py`, `src/visualize_icn_ext.py`: Phase 2 extended metrics.
+  - `src/test_icn_ext.py`: unit tests for Phase 2 logic.
+  - `docs/`: design plans, execution notes, and reports.
+- `interactive_workspace_viewer/`: Three.js workspace viewer, Python compute service,
+  checked-in baseline data, and handoff documentation. Read
+  `interactive_workspace_viewer/DELIVERY.md` before extending this feature.
 - `workspace_analysis/results_*`: generated artifacts; treat as derived output.
 - `spirit_moz1/`: reference robot assets and URDF files.
 - Root assets: `moz2_simplified.urdf`, figures, and reference PDF/paper files.
-- Virtual environments: root `.venv` and `workspace_analysis/.venv` are project-specific and should be preferred over any system Python.
+- Virtual environments: root `.venv` and
+  `workspace_analysis/manipulability_analysis/.venv` are project-specific and
+  should be preferred over any system Python.
 
 ## Required First Read
 
 Before changing analysis logic, metrics, voxel definitions, or result interpretation, read:
 
-- `workspace_analysis/moz2_manipulability_heatmap_plan.md`
+- `workspace_analysis/manipulability_analysis/docs/moz2_manipulability_heatmap_plan.md`
 
 Treat this plan as the primary design reference for Phase 0/1/2 work. If implementation diverges from it, document the reason in the related report or commit.
 
@@ -29,18 +34,23 @@ Treat this plan as the primary design reference for Phase 0/1/2 work. If impleme
 Use the project virtual environment when running scripts. Examples:
 
 - `source .venv/bin/activate`
-- `source workspace_analysis/.venv/bin/activate`
+- `source workspace_analysis/manipulability_analysis/.venv/bin/activate`
 
-- `python workspace_analysis/phase0_kinematics_validation.py`
+- `python workspace_analysis/manipulability_analysis/src/phase0_kinematics_validation.py`
   - Validate FK/Jacobian correctness before algorithm changes.
-- `python workspace_analysis/build_manipulability_map.py --arm both --samples 1048576 --output workspace_analysis/results_manipulability_6d_1M`
+- `python workspace_analysis/manipulability_analysis/src/build_manipulability_map.py --arm both --samples 1048576 --output workspace_analysis/manipulability_analysis/results`
   - Build Phase 1 position/orientation voxel maps.
-- `python workspace_analysis/visualize_manipulability_map.py --result-dir workspace_analysis/results_manipulability_6d_1M --arm both`
+- `python workspace_analysis/manipulability_analysis/src/visualize_manipulability_map.py --result-dir workspace_analysis/manipulability_analysis/results --arm both`
   - Generate Phase 1 plots.
-- `python workspace_analysis/compute_icn_ext.py --arm both`
+- `python workspace_analysis/manipulability_analysis/src/compute_icn_ext.py --arm both`
   - Compute Phase 2 `icn_ext_approx` from Phase 1 `best_q`.
-- `python workspace_analysis/test_icn_ext.py`
+- `python workspace_analysis/manipulability_analysis/src/test_icn_ext.py`
   - Run Phase 2 unit tests.
+
+- `python interactive_workspace_viewer/scripts/validate_viewer_assets.py`
+  - Validate the checked-in skeleton, joint limits, and hull assets.
+- `cd interactive_workspace_viewer/viewer && npm run build`
+  - Type-check and build the workspace viewer.
 
 ## Coding Style & Naming Conventions
 

@@ -1,6 +1,6 @@
 # MOZ2 左臂 SEW 富裕空间分析方案
 
-本文档记录针对 `moz2_simplified.urdf` 左臂的 SEW（shoulder-elbow-wrist）冗余空间分析方案。该方案基于论文 `SEW_Analysis_paper.md` / `Stereographic_SEW 2024 07 10.pdf` 的 generalized SEW 与 stereographic SEW 思路，并结合当前 MOZ2 构型和任务 ROI 进行工程化调整。
+本文档记录针对 `moz2_simplified.urdf` 左臂的 SEW（shoulder-elbow-wrist）冗余空间分析方案。该方案采用 generalized SEW 与 stereographic SEW 思路，并结合当前 MOZ2 构型和任务 ROI 进行工程化调整；原始论文副本属于本地研究资料，不随 workspace viewer 源码交付。
 
 ## 目标
 

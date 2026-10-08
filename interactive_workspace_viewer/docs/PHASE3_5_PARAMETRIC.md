@@ -13,7 +13,7 @@
 | # | 参数名 | 默认值(m) | URDF 映射 | 类别 |
 |---|--------|-----------|-----------|------|
 | 1 | `arm_upper_z_total` | 0.334 | LeftArm-2.z + LeftArm-3.z | A |
-| 2 | `arm_elbow_y_offset` | 0.025 | LeftArm-3.y=-val, RightArm-3.y=+val | A |
+| 2 | `arm_elbow_y_offset` | 0.015 | LeftArm-3.y=-val, RightArm-3.y=+val | A |
 | 3 | `arm_forearm_z_total` | 0.334 | LeftArm-4.z + LeftArm-5.z | A |
 | 4 | `arm_wrist_z` | 0.050 | LeftArm-6.z=-val | A |
 | 5 | `arm_shoulder_x_total` | 0.220 | LeftArm-0.x + LeftArm-1.x | B |
@@ -126,7 +126,7 @@ data/parametric/variants/<arm_shape_hash>/
 ```ts
 interface ParametricParams {
   arm_upper_z_total: number;      // default 0.334
-  arm_elbow_y_offset: number;     // default 0.025
+  arm_elbow_y_offset: number;     // default 0.015
   arm_forearm_z_total: number;    // default 0.334
   arm_wrist_z: number;            // default 0.050
   arm_shoulder_x_total: number;   // default 0.220
@@ -137,7 +137,7 @@ interface ParametricParams {
 
 const DEFAULT_PARAMS: ParametricParams = {
   arm_upper_z_total: 0.334,
-  arm_elbow_y_offset: 0.025,
+  arm_elbow_y_offset: 0.015,
   arm_forearm_z_total: 0.334,
   arm_wrist_z: 0.050,
   arm_shoulder_x_total: 0.220,
@@ -174,7 +174,7 @@ apply() 逻辑：
 ```
 ┌─ Parametric Geometry ────────┐
 │ arm_upper_z    [__0.334__] m │
-│ arm_elbow_y    [__0.025__] m │
+│ arm_elbow_y    [__0.015__] m │
 │ arm_forearm_z  [__0.334__] m │
 │ arm_wrist_z    [__0.050__] m │
 │ ─── B class (no recompute) ──│
@@ -207,7 +207,7 @@ CLI 接口：
 ```bash
 python scripts/recompute_hulls.py \
   --arm-upper-z 0.334 \
-  --arm-elbow-y 0.025 \
+  --arm-elbow-y 0.015 \
   --arm-forearm-z 0.334 \
   --arm-wrist-z 0.050 \
   --sobol-m 12 \

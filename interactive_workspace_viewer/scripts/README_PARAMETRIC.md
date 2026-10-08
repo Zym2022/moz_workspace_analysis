@@ -6,7 +6,7 @@ Backend implementation for Phase 3.5 parametric geometry what-if analysis.
 
 This backend enables recomputation of arm convex hulls with modified A-class geometry parameters:
 - `arm_upper_z_total` — total upper arm z length (default: 0.334m)
-- `arm_elbow_y_offset` — elbow y offset (default: 0.025m)
+- `arm_elbow_y_offset` — elbow y offset (default: 0.015m)
 - `arm_forearm_z_total` — total forearm z length (default: 0.334m)
 - `arm_wrist_z` — wrist z length (default: 0.050m)
 
@@ -20,7 +20,7 @@ CLI script for parametric hull recomputation.
 ```bash
 python3 scripts/recompute_hulls.py \
   --arm-upper-z 0.334 \
-  --arm-elbow-y 0.025 \
+  --arm-elbow-y 0.015 \
   --arm-forearm-z 0.334 \
   --arm-wrist-z 0.050 \
   --sobol-m 12
@@ -28,7 +28,7 @@ python3 scripts/recompute_hulls.py \
 
 **Parameters:**
 - `--arm-upper-z` — Total upper arm z length (default: 0.334)
-- `--arm-elbow-y` — Elbow y offset (default: 0.025)
+- `--arm-elbow-y` — Elbow y offset (default: 0.015)
 - `--arm-forearm-z` — Total forearm z length (default: 0.334)
 - `--arm-wrist-z` — Wrist z length (default: 0.050)
 - `--sobol-m` — Sobol exponent (samples = 2^m). 12=quick preview, 18=production
@@ -38,8 +38,8 @@ python3 scripts/recompute_hulls.py \
 ```
 data/parametric/variants/<hash>/
   config.json
-  left_arm_hull.json
-  right_arm_hull.json
+  left_arm_hull_2p12.json
+  right_arm_hull_2p12.json
 ```
 
 **Implementation:**
@@ -70,7 +70,7 @@ Accepts A-class parameters, returns hull URLs.
 ```json
 {
   "arm_upper_z_total": 0.334,
-  "arm_elbow_y_offset": 0.025,
+  "arm_elbow_y_offset": 0.015,
   "arm_forearm_z_total": 0.334,
   "arm_wrist_z": 0.050,
   "sobol_m": 12
@@ -81,9 +81,9 @@ Accepts A-class parameters, returns hull URLs.
 ```json
 {
   "status": "ok",
-  "hash": "e9bb9f136bdd",
-  "left_hull_url": "/parametric/variants/e9bb9f136bdd/left_arm_hull.json",
-  "right_hull_url": "/parametric/variants/e9bb9f136bdd/right_arm_hull.json",
+  "hash": "4468b379a698",
+  "left_hull_url": "/parametric/variants/4468b379a698/left_arm_hull_2p12.json",
+  "right_hull_url": "/parametric/variants/4468b379a698/right_arm_hull_2p12.json",
   "sobol_m": 12,
   "cached": false
 }
@@ -108,12 +108,12 @@ Vite dev server proxy configuration.
 ### Test CLI script
 
 ```bash
-cd /home/dreaming/cal_ws_moz2/interactive_workspace_viewer
+cd /path/to/cal_ws_moz2/interactive_workspace_viewer
 
-# Test with default parameters (should complete in ~2s for sobol_m=12)
+# Test with default parameters (quick preview at sobol_m=12)
 python3 scripts/recompute_hulls.py \
   --arm-upper-z 0.334 \
-  --arm-elbow-y 0.025 \
+  --arm-elbow-y 0.015 \
   --arm-forearm-z 0.334 \
   --arm-wrist-z 0.050 \
   --sobol-m 12
@@ -123,7 +123,7 @@ python3 scripts/recompute_hulls.py \
 
 **Terminal 1 (start server):**
 ```bash
-cd /home/dreaming/cal_ws_moz2/interactive_workspace_viewer
+cd /path/to/cal_ws_moz2/interactive_workspace_viewer
 python3 scripts/hull_server.py
 ```
 
@@ -132,15 +132,15 @@ python3 scripts/hull_server.py
 # Test cached request (should return immediately)
 curl -X POST http://localhost:8765/recompute \
   -H 'Content-Type: application/json' \
-  -d '{"arm_upper_z_total":0.334,"arm_elbow_y_offset":0.025,"arm_forearm_z_total":0.334,"arm_wrist_z":0.050,"sobol_m":12}'
+  -d '{"arm_upper_z_total":0.334,"arm_elbow_y_offset":0.015,"arm_forearm_z_total":0.334,"arm_wrist_z":0.050,"sobol_m":12}'
 
 # Test new parameters (will recompute)
 curl -X POST http://localhost:8765/recompute \
   -H 'Content-Type: application/json' \
-  -d '{"arm_upper_z_total":0.400,"arm_elbow_y_offset":0.025,"arm_forearm_z_total":0.334,"arm_wrist_z":0.050,"sobol_m":12}'
+  -d '{"arm_upper_z_total":0.400,"arm_elbow_y_offset":0.015,"arm_forearm_z_total":0.334,"arm_wrist_z":0.050,"sobol_m":12}'
 
 # Test static file serving
-curl http://localhost:8765/parametric/variants/e9bb9f136bdd/config.json
+curl http://localhost:8765/parametric/variants/4468b379a698/config.json
 ```
 
 ## Integration with Frontend
@@ -172,14 +172,14 @@ async function recomputeHulls(params: ParametricParams) {
 
 ## Performance
 
-- **sobol_m=12** (4096 samples): ~2s per arm, suitable for preview
-- **sobol_m=18** (262144 samples): ~30s per arm, production quality
+- **sobol_m=12** (4096 samples): typically a few seconds, suitable for preview
+- **sobol_m=18** (262144 samples): machine-dependent; allow about one minute for the current left-arm-plus-mirror workflow
 
 ## Dependencies
 
-All dependencies already available in the workspace:
+Install the dependencies declared in `../requirements.txt`:
 - numpy
 - scipy (ConvexHull, qmc.Sobol)
 - Python standard library (http.server, json, pathlib, etc.)
 
-No additional packages required.
+The HTTP layer itself only uses the Python standard library.

@@ -1,38 +1,69 @@
-# Python
+# Python caches / tooling
 __pycache__/
 *.py[cod]
 *.egg-info/
 *.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 
-# Virtual environments
+# Local Python environments
 .venv/
+.venv-*/
 venv/
 
-# Results / generated data
+# Local environment and secrets (commit an explicit *.example instead)
+.env
+.env.*
+!.env.example
+
+# Local assistant configuration
+.claude/
+
+# Analysis outputs and numeric intermediates
 workspace_analysis/results*/
-workspace_analysis/manipulability_analysis/results/
+workspace_analysis/**/results/
 workspace_analysis/manipulability_analysis/results_legacy/
 *.npz
-*.png
 *.npy
 
-# Large mesh files
+# Interactive viewer derived output
+interactive_workspace_viewer/results/
+interactive_workspace_viewer/data/parametric/
+interactive_workspace_viewer/viewer/dist/
+interactive_workspace_viewer/viewer/.vite/
+
+# One-off MOZ1 projection experiment (hard-coded geometry)
+interactive_workspace_viewer/scripts/plot_hull_projections.py
+interactive_workspace_viewer/scripts/plot_hull_projections_baselink.py
+
+# Root-level scratch image retained as a local reference only
+/image.png
+
+# Local research notes/reference files outside the viewer handoff scope
+/SEW_Analysis_paper.md
+/Stereographic_SEW 2024 07 10.pdf
+/moz1_vs_moz2_arm_comparison.md
+
+# Large robot mesh assets (the viewer currently uses a skeleton)
 spirit_moz1/meshes/
 *.STL
 *.stl
 
-# Node
+# Node dependencies and reports
 node_modules/
-dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Parametric hull cache (generated data)
-interactive_workspace_viewer/data/parametric/
-
-# OS
+# OS / editor state
 .DS_Store
 Thumbs.db
-
-# IDE
 .idea/
 .vscode/
 *.swp
